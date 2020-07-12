@@ -5,6 +5,10 @@ const AdminSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    clearance: {
+        type: Boolean,
+        required: true
+    },
     password: {
         type: String,
         required: true

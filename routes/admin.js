@@ -1,47 +1,63 @@
+// Routing dependencies 
 const express = require('express');
 const router = express.Router();
+// Password dependencies 
+const passwordStrength = require('check-password-strength');
 const bcrypt = require('bcryptjs');
+// Login dependency
 const passport = require('passport');
-const passwordStrength = require('check-password-strength')
 
-// User model
+// Load mongoose admin schema
 const Admin = require('../models/Admin');
+// Load authentication 
 const { forwardAuthenticated } = require('../config/auth');
 
-// Login page 
+// Startup page get request 
+router.get('/startup', forwardAuthenticated, (req, res) => {
+    res.render('startup');
+});
+
+// Login page get request 
 router.get('/login', forwardAuthenticated, (req, res) => {
     res.render('login');
 });
 
-// Register page 
+// Register page get request 
 router.get('/register', forwardAuthenticated, (req, res) => {
     res.render('register');
 });
 
-// Register Hanle 
-router.post('/register', (req, res) => {
+// Handle VoterPass Startup
+router.post('/startup', async (req, res) => {
+    // Get request body 
     const { name, password, password2 } = req.body;
+    // initialize error list
     let errors = [];
 
-    // Check required fields 
+    // Check that the system hasn't been started 
+    const masterAdmin = await Admin.findOne({ clearance: true });
+    if (masterAdmin) {
+        errors.push({ msg: 'System has already been started. Please login.' });
+    }
+    // Check that all form fields have been filled
     if (!name || !password || !password2) {
-        errors.push({ msg: 'All Fields are Required' });
+        errors.push({ msg: 'All fields must be filled' });
     }
-
-    // Check is passwords match 
+    // Check that both passwords match 
     if (password !== password2) {
-        errors.push({ msg: 'Passwords do not Match' });
+        errors.push({ msg: 'Passwords do not match.' });
     }
-
-    // Check password strength
-    let passStrength = passwordStrength(password); 
-    if (passStrength.id === 0) {
-        errors.push({ msg: 'Password Strength is too weak' });
+    // Check that the password is strong enough
+    if (password) {
+        let passStrength = passwordStrength(password); 
+        if (passStrength.id === 0) {
+            errors.push({ msg: 'Password too weak.' });
+        }
     }
-
-    // Check found errors
+    // Determine if any errors were encountered 
     if (errors.length > 0) {
-        res.render('register', {
+        // Rerender the page and return error messages for flashing
+        res.render('startup', {
             errors,
             name,
             password,
@@ -49,11 +65,87 @@ router.post('/register', (req, res) => {
         });
     }
     else {
-        // Validation passed
+        // Create a new admin object
+        const newAdmin = new Admin({
+            name: name,
+            password: password,
+            clearance: true
+        });
+        // Hash the entered password
+        bcrypt.genSalt(10, (err, salt) => { 
+            bcrypt.hash(newAdmin.password, salt, (err, hash) => {
+                if (err) {
+                    console.log(err);
+                }
+                // Set admin object's password to the newly hashed one
+                newAdmin.password = hash;
+                // Save the admin to the database
+                newAdmin.save()
+                .then(admin => {
+                    // Flash successful startup 
+                    req.flash(
+                        'success_msg', 
+                        'Master admin registered. You may now begin adding new Admins or Login in.'
+                    );
+                    // redirect admin to login page 
+                    res.redirect('/admin/login');
+                })
+                .catch(err => console.log(err));
+            });
+        });
+    }
+});
+
+// Handle admin registration request  
+router.post('/register', async (req, res) => {
+    // Get request body 
+    const { name, password, password2, password3 } = req.body;
+    // initialize error list
+    let errors = [];
+
+    // Check all form fields have been filed  
+    if (!name || !password || !password2 || !password3) {
+        errors.push({ msg: 'All fields are required.' });
+    }
+    // Check that both passwords match 
+    if (password !== password2) {
+        errors.push({ msg: 'Passwords do not match.' });
+    }
+    // Check that the password is strong enough 
+    if (password) {
+        let passStrength = passwordStrength(password); 
+        if (passStrength.id === 0) {
+            errors.push({ msg: 'Password too weak.' });
+        }
+    }
+    // Check that the system has been started 
+    const masterAdmin = await Admin.findOne({ clearance: true });
+    if (!masterAdmin) {
+        errors.push({ msg: 'System Not Started.' });
+    } else {
+        // Check that the master password is correct
+        const masterPass = await bcrypt.compare(password3, masterAdmin.password);
+        if (!masterPass) {
+            errors.push({ msg: 'Master password is incorrect.' });
+        }
+    }
+    // Determine if any errors were encountered 
+    if (errors.length > 0) {
+        // Rerender the page and return error messages for flashing
+        res.render('register', {
+            errors,
+            name,
+            password,
+            password2,
+            password3
+        });
+    }
+    else {
+        // Validate that the admin name is not taken 
         Admin.findOne({ name: name})
             .then(admin => {
                 if (admin) {
-                    // User exists
+                    // If the admin exists push error message and rerender the registration page 
                     errors.push({ msg: 'Name is already taken' });
                     res.render('register', {
                         errors,
@@ -62,24 +154,27 @@ router.post('/register', (req, res) => {
                         password2
                     });
                 } else {
+                    // Create a new admin object
                     const newAdmin = new Admin({
-                        name,
-                        password
+                        name: name,
+                        password: password,
+                        clearance: false
                     });
-
-                    // Hash Password
+                    // Hash the entered password
                     bcrypt.genSalt(10, (err, salt) => { 
                         bcrypt.hash(newAdmin.password, salt, (err, hash) => {
                             if (err) throw err;
-                            // set hashed password
+                            // Set admin password to the newly hashed one
                             newAdmin.password = hash;
-                            // save user
+                            // Save the admin to the database
                             newAdmin.save()
                             .then(admin => {
+                                // On successful registration flash message
                                 req.flash(
                                     'success_msg', 
                                     'Admin Registered. You may now login'
                                 );
+                                // Redirect admin to the login page 
                                 res.redirect('/admin/login');
                             })
                             .catch(err => console.log(err));
@@ -90,7 +185,7 @@ router.post('/register', (req, res) => {
     }
 });
 
-// Login Handle 
+// Handle admin login request 
 router.post('/login', (req, res, next) => {
     passport.authenticate('local', {
         successRedirect: '/dashboard',
@@ -99,7 +194,7 @@ router.post('/login', (req, res, next) => {
     })(req, res, next);
 });
 
-// Logout Handle
+// Handle admin logout request
 router.get('/logout', (req, res) => {
     req.logout();
     req.flash('success_msg', 'Admin has been logged out');

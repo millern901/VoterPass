@@ -39,9 +39,24 @@
               value="<%= typeof password2 != 'undefined' ? password2 : '' %>"
             />
           </div>
-          <button type="submit" class="btn btn-primary btn-block"> Register Admin </button>
+          <div class="form-group">
+            <label for="password2">Master Password</label>
+            <input
+              type="password"
+              id="password3"
+              name="password3"
+              class="form-control"
+              placeholder="Master Password"
+              value="<%= typeof password3 != 'undefined' ? password3 : '' %>"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"> Register New Admin </button>
         </form>
-        <p class="lead mt-4">Have An Account? <a href="/admin/login">Login</a></p>
+        <div class="lead mt-4 text-center">
+          <p>If VoterPass hass not started please create a master admin with the first link. If you have already registred and would like to signin please login with the second link.</p>
+          <a class="btn btn-primary btn-block" href="/admin/startup">Startup System</a>  
+          <a class="btn btn-primary btn-block" href="/admin/login">Already Registered? Login</a>  
+        </div>
       </div>
     </div>
   </div>

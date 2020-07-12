@@ -1,44 +1,49 @@
+// Routing dependencies 
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts');
+// Database dependency
 const mongoose = require('mongoose');
+// Messages dependency
 const flash = require('connect-flash');
+// Session/authentication dependencies
 const session = require('express-session');
 const passport = require('passport');
 
-// Create Express App
+
+// Initialize express application 
 const app = express();
 
-// Passport config 
+// Configure passport login
 require('./config/passport')(passport);
 
-// DB Config
+// Establish database connection 
 const db = require('./config/keys').MongoURI;
 mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB Connected...'))
     .catch((err) => console.log(err));
 
-// EJS
+// Configure application layout with EJS
 app.use(expressLayouts);
 app.set('view engine', 'ejs');
 
-// Bodyparser
+// Setup url bodyparser
 app.use(express.urlencoded({ extended: true }));
 
-// Express session 
+// Initialize application session
 app.use(session({
-    secret: 'shhhh',
+    secret: 'shhhh this is a secret',
     resave: true,
     saveUninitialized: true
 }));
 
-// Passport middleware
+// Configure passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Connect flash
+// Configure flash messaging
 app.use(flash());
 
-// Global Vars
+// Set global variables for flash messages
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
@@ -46,10 +51,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes
+// Set express routing files 
 app.use('/', require('./routes/index.js'));
 app.use('/admin', require('./routes/admin.js'));
 
-// Server View 
+// Start application 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, console.log(`Server started on port ${PORT}`));

@@ -1,3 +1,22 @@
-<h1 class="mt-4">Admin Dashboard</h1>
-<p class="lead mb-3">Welcome Admin <%- admin.name %></p>
-<a href="/admin/logout" class="btn btn-secondary">Logout</a>
+<h1 class="mt-4">Voter Pass Dashboard</h1>
+<a href="/admin/logout" class="btn btn-secondary"> Admin Logout </a>
+
+<div class="row mt-5">
+    <div class="col-md-6 m-auto">
+        <div class="card card-body">
+            <h1 class="text-center mb-3">Queue Information TODO</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6 m-auto">
+        <div class="card card-body">
+            <%- include('./partials/messages.ejs') %>
+            <form action="/dashboard/" method="POST">
+                <button type="submit" class="btn btn-primary btn-block"> Add Voter to Queue TODO</button>
+            </form>
+        </div>
+    </div>
+</div>
+

@@ -1,17 +1,15 @@
+// Routing dependencies 
 const express = require('express');
 const router = express.Router();
+// Authentication dependencies
 const { ensureAuthenticated, forwardAuthenticated } = require('../config/auth');
 
-// Welcome index
+// Set routing for startup/login/register without authentication
 router.get('/', forwardAuthenticated, (req, res) => {
     res.render('welcome');
 });
 
-// Dashboard index 
-router.get('/dashboard', ensureAuthenticated, (req, res) => { 
-    res.render('dashboard', {
-        admin: req.user
-    })
-});
+// Set routing for admin dashboard with authentication 
+router.use('/dashboard', ensureAuthenticated, require('./dashboard.js'));
 
 module.exports = router;
