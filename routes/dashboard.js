@@ -50,7 +50,7 @@ router.post('/', (req, res) => {
 
 // functinoality to remove a voter from the queue
 router.delete('/', (req, res) => {
-
+    
 });
 
 // add functinoality for QR code reader  
