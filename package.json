@@ -31,6 +31,7 @@
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "qrcode": "^1.4.4",
+    "qrcode-reader": "^1.0.4",
     "queue": "^6.0.1"
   },
   "devDependencies": {

@@ -1,16 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const passport = require('passport');
 const QRCode = require('qrcode')
 
-// User model
+// Voter model
 const Voter = require('../models/Voter');
+
+// Main dashboard get request
 router.get('/', (req, res) => {
     res.render('../views/dashboard');
 });
+// Queue page get request 
+router.get('/queue', (req, res) => {
+    res.render('queue');
+});
+// Return page get request 
+router.get('/return', (req, res) => {
+    res.render('return');
+});
+
 
 // functinoality to add a voter to the queue
-router.post('/', (req, res) => {
+router.post('/queue', (req, res) => {
     // determine the number of voters in the queue
     let queueSize = 0;
     /*
@@ -43,7 +53,7 @@ router.post('/', (req, res) => {
             'Voter Added to Queue.'
         );
         console.log(voter);
-        res.redirect('/dashboard');
+        res.redirect('/dashboard/queue');
     })
     .catch(err => console.log(err));
 });
