@@ -1,0 +1,27 @@
+<div class="row mt-5">
+    <div class="col-md-6 m-auto">
+      <div class="card card-body">
+        <h1 class="text-center mb-3">
+          <i class="fas fa-user-plus"></i> Set New Queue Parameters
+        </h1>
+        <%- include('./partials/messages.ejs') %>
+        <form action="/dashboard/checkin/queueUpdate" method="POST">
+          <div class="form-group">
+            <label for="boothCount">Booth Count</label>
+            <input
+              type="boothCount"
+              id="boothCount"
+              name="boothCount"
+              class="form-control"
+              placeholder="Enter Booth Count"
+              value="<%= typeof boothCount != 'undefined' ? boothCount : '' %>"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"> Update </button>
+        </form>
+        <div class="lead mt-4 text-center">
+          <a class="btn btn-primary btn-block" href="/dashboard/checkin">Don't need to update?</a>  
+        </div>
+      </div>
+    </div>
+  </div>

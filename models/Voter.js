@@ -7,15 +7,15 @@ const VoterSchema = new mongoose.Schema({
     },
     queueType: {
         type: Boolean,
-        default: 0
+        default: true
     },
     qrScanOne: {
         type: Date,
         default: null
     },
-    qrScanTwo: {
-        type: Date,
-        default: null
+    queueLength: {
+        type: Number,
+        default: 0
     }
 });
 
