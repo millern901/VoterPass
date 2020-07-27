@@ -9,7 +9,8 @@ router.get('/', (req, res) => {
     res.render('../views/dashboard');
 });
 
-// functinoality to add a voter to the queue
+
+// functionality to add a voter to the queue
 router.post('/', (req, res) => {
     // determine the number of voters in the queue
     let queueSize = 0;
@@ -54,6 +55,5 @@ router.delete('/', (req, res) => {
 });
 
 // add functinoality for QR code reader  
-
 
 module.exports = router;

@@ -1,3 +1,8 @@
+<header>
+    <meta content="content=X-Content-Type-Options=None"/>
+
+</header>
+
 <h1 class="mt-4">Voter Pass Dashboard</h1>
 <a href="/admin/logout" class="btn btn-secondary"> Admin Logout </a>
 
@@ -8,6 +13,56 @@
         </div>
     </div>
 </div>
+
+<script src="../modules/html5-qrcode.min.js"></script>
+
+<div id="reader"></div>
+
+
+<script>
+    function onScanSuccess(qrMessage) {
+        // handle the scanned code as you like
+        console.log(`QR matched = ${qrMessage}`);
+        
+    }
+
+    function onScanFailure(error) {
+        // handle scan failure, usually better to ignore and keep scanning
+        console.warn(`QR error = ${error}`);
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", { fps: 10, qrbox: 250 }, /* verbose= */ true);
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    Html5Qrcode.getCameras().then(devices => {
+        /**
+         * devices would be an array of objects of type:
+         * { id: "id", label: "label" }
+         */
+        if (devices && devices.length) {
+            var cameraId = devices[0].id;
+            // .. use this to start scanning.
+        }
+    }).catch(err => {
+        // handle err
+    });
+    const html5QrCode = new Html5Qrcode(/* element id */ "reader");
+    html5QrCode.start(
+    cameraId, 
+    {
+        fps: 10,    // Optional frame per seconds for qr code scanning
+        qrbox: 250  // Optional if you want bounded box UI
+    },
+    qrCodeMessage => {
+        // do something when code is read
+    },
+    errorMessage => {
+        // parse error, ignore it.
+    })
+    .catch(err => {
+    // Start failed, handle it.
+    });
+</script>
 
 <div class="row mt-5">
     <div class="col-md-6 m-auto">
