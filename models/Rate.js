@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const RateSchema = new mongoose.Schema({
     voterRate: {
-        type: Decimal128,
+        type: Number,
         required: true
     }
 });

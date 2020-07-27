@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
     res.render('../views/dashboard');
 });
 router.get('/checkin', (req, res) => {
-    res.render('queue');
+    res.render('checkin');
 });
 router.get('/return', (req, res) => {
     res.render('return');
@@ -73,25 +73,35 @@ router.post('/checkin', async (req, res) => {
 });
 // functionality to update the queue
 router.post('/checkin/queueUpdate', async (req, res) => {
+    let boothCount = req.boothCount;
+    let totalRate = 0;
+    let allRates = await Rate.find({});
+    allRates.forEach(rate => {
+        totalRate += rate.voterRate;
+    });
+    let newCallbackRate = totalRate / allRates.length;
+
     queueQuery = await Queue.find({})
     if (queueQuery.length === 0) {
-        req.flash(
-            'error_msg', 
-            'No Queue has been set up.'
-        );
-        res.redirect('/dashboard/checkin');
+        // create a new voter object
+        const newQueue = new Voter({
+            boothCount,
+            newCallbackRate
+        });
+        
+        newQueue.save()
+        .then(queue => {
+            req.flash(
+                'success_msg', 
+                'Queue Successfully Created.'
+            );
+            console.log(newQueue);
+            res.redirect('/dashboard/checkin');
+        })
+        .catch(err => console.log(err));
     }
     else {
         let currentQueue = queueQuery[0]
-        currentQueue.boothCount = req.boothCount;
-
-        let totalRate = 0;
-        let allRates = await Rate.find({});
-        allRates.forEach(rate => {
-            totalRate += rate.voterRate;
-        });
-        let newCallbackRate = totalRate / allRates.length;
-        currentQueue.callbackRate = newCallbackRate;
 
         currentQueue.save()
         .then(newQueue => {

@@ -6,7 +6,23 @@
         <div class="lead mt-4 text-center">
           <a href="/admin/logout" class="btn btn-secondary"> Admin Logout </a>
           <a class="btn btn-primary btn-block" href="/dashboard">Go Back to Main Dashboard</a>  
-        </div>        
+        </div>  
+        
+        <form action="/dashboard/return" method="POST">
+          <div class="form-group">
+            <label for="voterqr">Voter QR Code</label>
+            <input
+              type="voterqr"
+              id="voterqr"
+              name="voterqr"
+              class="form-control"
+              placeholder="Enter Voter QR Code"
+              value="<%= typeof voterqr != 'undefined' ? voterqr : '' %>"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"> submit </button>
+        </form>
+
         </div>
       </div>
     </div>
