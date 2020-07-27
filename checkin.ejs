@@ -1,0 +1,37 @@
+<div class="row mt-5">
+    <div class="col-md-6 m-auto">
+      <div class="card card-body text-center">
+        <h1> <i class="fab fa-node-js fa-3x"></i> </h1>
+        <p>Main Voter Queue</p>
+        <div class="lead mt-4 text-center">
+          <a href="/admin/logout" class="btn btn-secondary"> Admin Logout </a>
+          <a class="btn btn-primary btn-block" href="/dashboard">Go Back to Main Dashboard</a> 
+          <a class="btn btn-primary btn-block" href="/dashboard/checkin/queueUpdate">Update Queue Parameters</a>     
+          <div class="row mt-5">
+            <div class="col-md-6 m-auto">
+                <div class="card card-body">
+                    <%- include('./partials/messages.ejs') %>
+                    
+                    
+                    <form action="/dashboard/checkin/" method="POST">
+                      <div class="form-group">
+                        <label for="boothCount">Booth Count</label>
+                        <input
+                          type="name"
+                          id="boothCount"
+                          name="boothCount"
+                          class="form-control"
+                          placeholder="Enter booth count"
+                        />
+                      </div>
+                        <button type="submit" name = "button" value = "createQueue" class="btn btn-primary btn-block">Create Queue</button>
+                        <button type="submit" name = "button" value = "addVoter" class="btn btn-primary btn-block"> Add voter to queue </button>
+                    </form>
+                </div>
+            </div>
+        </div>        
+        </div>
+      </div>
+    </div>
+  </div>
+
