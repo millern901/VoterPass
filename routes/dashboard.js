@@ -4,47 +4,58 @@ const router = express.Router();
 const QRCode = require('qrcode');
 const moment = require('moment');
 
-// Mongoose models
+// Mongoose model
 const Voter = require('../models/Voter');
 const Queue = require('../models/Queue');
 const Rate = require('../models/Rate');
 
-
-// Page render requests
+//Page render requests
 router.get('/', (req, res) => {
     res.render('../views/dashboard');
 });
+// Queue page get request 
 router.get('/checkin', (req, res) => {
     res.render('checkin');
 });
+// Return page get request 
 router.get('/return', (req, res) => {
     res.render('return');
 });
+
 // have the page render with the current queue parameters
+
 router.get('/checkin/queueUpdate', (req, res) => {
     res.render('queueUpdate');
 });
 
-
-// functionality to add person to the main queue
+// functionality to add a voter to the queue
 router.post('/checkin', async (req, res) => {
-    queueuQuery = await Queue.find({})
-    if (queueuQuery.length === 0) {
-        req.flash(
-            'error_msg', 
-            'No Queue has been set up.'
-        );
-        res.redirect('/dashboard/checkin');
-    }
-    else {
-        queue = queueuQuery[0];
-
-        // determine the number of voters in the queue
-        voterLengthQuery = await Voter.find({queueType: true}, (err) => {
-            if (err) console.log(err);
-        });
-        queueLength = voterLengthQuery.length
-
+        const { boothCount } = req.body;
+        let errors = [];
+        //Checks if queue is already present
+        mainQueue = await Queue.find({})
+        if(req.body.button === "createQueue"){
+            if(!mainQueue && boothCount != null){
+                console.log("GOTTEEEEEEM");
+                const queue = new Queue({
+                    boothCount: boothCount            
+                });
+                queue.save();
+                console.log("Queue saved!");
+            }else if(mainQueue){
+                console.log("Queue already exists");
+                errors.push({ msg: 'Queue already exists' });
+                res.render('checkin', {
+                    errors
+                });
+            }else if(!mainQueue && boothCount === null){
+                console.log("Booth count is empty");
+                errors.push({ msg: 'Booth count cannot be left empty' });
+                res.render('checkin', {
+                    errors
+                });
+            }
+        }else if(req.body.button === "addVoter"){
         // calculate callback based on voting rate and number of people in main queue
         var callbackTime = moment(Date.now).add((queueLength * queue.callbackRate / queue.boothCount), "m").toDate();
 
@@ -62,15 +73,20 @@ router.post('/checkin', async (req, res) => {
         newVoter.save()
         .then(voter => {
             req.flash(
-                'success_msg', 
-                'Voter Added to Queue.'
-            );
+           'success_msg', 
+           'Voter Added to Queue.'
+           );
             console.log(voter);
             res.redirect('/dashboard/checkin');
         })
         .catch(err => console.log(err));
-    }
+        }
+   
+        
+        
+          
 });
+
 // functionality to update the queue
 router.post('/checkin/queueUpdate', async (req, res) => {
     let boothCount = req.boothCount;
@@ -88,6 +104,7 @@ router.post('/checkin/queueUpdate', async (req, res) => {
             boothCount,
             newCallbackRate
         });
+
         
         newQueue.save()
         .then(queue => {
@@ -103,12 +120,14 @@ router.post('/checkin/queueUpdate', async (req, res) => {
     else {
         let currentQueue = queueQuery[0]
 
+
         currentQueue.save()
         .then(newQueue => {
             req.flash(
                 'success_msg', 
                 'Queue Successfully Updated.'
             );
+
             console.log(newQueue);
             res.redirect('/dashboard/checkin');
         })
@@ -117,12 +136,15 @@ router.post('/checkin/queueUpdate', async (req, res) => {
 });
 
 
+
+
 // functinoality to compute rates of returning voters
 router.post('/return', async (req, res) => {
     const { voterId } = req.body.url;
     returningVoterQuery = await Voter.find({}, (err) => {
         if (err) console.log(err);
     });
+
 
     if (returningVoterQuery.length === 0) {
         req.flash(
@@ -133,6 +155,7 @@ router.post('/return', async (req, res) => {
     }
     else {
         returningVoter = returningVoterQuery[0];
+
 
         if (returningVoter.queueType) {
             let timeDifference = currentTime.getTime() - returningVoter.callbackTime.getTime();
@@ -146,6 +169,7 @@ router.post('/return', async (req, res) => {
                 errors.push({ msg: 'Your callback time has not started.' });
             }
 
+
             if (errors.length > 0) {
                 // Rerender the page and return error messages for flashing
                 res.render('return', {
@@ -156,6 +180,7 @@ router.post('/return', async (req, res) => {
                 returningVoter.qrScanOne = currentTime;
                 returningVoter.queueType = false;
                 returningVoter.queueLength = await Voter.find({queueType: false}, (err) => { if (err) console.log(err); }).length;
+
 
                 returningVoter.save()
                 .then(voter => {
@@ -175,13 +200,15 @@ router.post('/return', async (req, res) => {
             let startTime = returningVoter.qrScanOne;
             let endTime = Date.now;
 
+
             // TODO: check rate calculation 
             let rate = (endTime.getTime() - startTime.getTime()) * boothCount / queueLength;
+
 
             const newRate = new Rate({
                 rate
             });
-            // save the voter to the database 
+            // save the rate to the database 
             newRate.save()
             .then(rate => {
                 console.log(rate);
@@ -200,5 +227,8 @@ router.post('/return', async (req, res) => {
         }
     }
 });
+
+// add functinoality for QR code reader  
+
 
 module.exports = router;
