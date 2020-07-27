@@ -5,16 +5,8 @@ const QueueSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    queueLength: {
-        type: Number,
-        default: 0
-    },
     callbackRate: {
         type: Number,
-        default: 0
-    },
-    queueType: {
-        type: Boolean,
         default: 0
     }
 });
