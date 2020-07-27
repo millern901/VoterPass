@@ -22,7 +22,20 @@ router.get('/return', (req, res) => {
     res.render('return');
 });
 
+<<<<<<< HEAD
 // have the page render with the current queue parameters
+=======
+
+// functionality to add a voter to the queue
+router.post('/', (req, res) => {
+    // determine the number of voters in the queue
+    let queueSize = 0;
+    /*
+    Voter.count({}, ( err, count ) => {
+        queueSize = count;
+    });
+    */
+>>>>>>> qr-scanner-implement
 
 router.get('/checkin/queueUpdate', (req, res) => {
     res.render('queueUpdate');
@@ -231,5 +244,9 @@ router.post('/return', async (req, res) => {
 
 // add functinoality for QR code reader  
 
+<<<<<<< HEAD
 
 module.exports = router;
+=======
+module.exports = router;
+>>>>>>> qr-scanner-implement

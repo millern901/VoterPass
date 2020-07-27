@@ -55,6 +55,9 @@ app.use((req, res, next) => {
 app.use('/', require('./routes/index.js'));
 app.use('/admin', require('./routes/admin.js'));
 
+// Use QR scanner module
+app.use('/modules', express.static('./modules/'));
+
 // Start application 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, console.log(`Server started on port ${PORT}`));
