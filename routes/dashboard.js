@@ -57,7 +57,8 @@ router.post('/checkin', async (req, res) => {
             }
         }else if(req.body.button === "addVoter"){
         // calculate callback based on voting rate and number of people in main queue
-        var callbackTime = moment(Date.now).add((queueLength * queue.callbackRate / queue.boothCount), "m").toDate();
+        //var callbackTime = moment(Date.now).add((queueLength * mainQueue.callbackRate / mainQueue.boothCount), "m").toDate();
+        var callbackTime = Date.now();
 
         // create a new voter object
         const newVoter = new Voter({
