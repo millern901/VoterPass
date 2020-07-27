@@ -27,11 +27,8 @@
     "express": "^4.17.1",
     "express-ejs-layouts": "^2.5.0",
     "express-session": "^1.17.1",
-<<<<<<< HEAD
     "moment": "^2.27.0",
-=======
     "html5-qrcode": "^1.1.8",
->>>>>>> qr-scanner-implement
     "mongoose": "^5.9.20",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
