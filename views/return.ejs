@@ -13,6 +13,7 @@
           <div id="reader"></div>
 
           <script>
+              //TO FIX: Current code will not send a post request if someone tries scanning the same QR code twice in a row. 
               let previousScan = "";
               function onScanSuccess(qrMessage) {
                   // handle the scanned code as you like
