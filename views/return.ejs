@@ -13,19 +13,25 @@
           <div id="reader"></div>
 
           <script>
+              let previousScan = "";
               function onScanSuccess(qrMessage) {
                   // handle the scanned code as you like
                   console.log(`QR matched = ${qrMessage}`);
-                  const XHR = new XMLHttpRequest();
-                  XHR.open('POST', '/dashboard/return');
-                  XHR.send(qrMessage);
-                  XHR.onreadystatechange=function(){
-                    console.log(XHR.responseText);
-                    if(this.status==200){
-                      console.log("AAFADKFALKD");
-                    }
-                  };
-                  console.log(XHR.response);
+                  if(previousScan == qrMessage){
+                    const XHR = new XMLHttpRequest();
+                    XHR.open('POST', '/dashboard/return');
+                    XHR.send(qrMessage);
+                    XHR.onreadystatechange=function(){
+                      console.log(XHR.responseText);
+                      if(this.status==200){
+                        console.log("AAFADKFALKD");
+                      }
+                    };
+                    console.log(XHR.response);
+                  }
+                  else {
+                    previousScan = qrMessage;
+                  }
               }
 
               function onScanFailure(error) {
