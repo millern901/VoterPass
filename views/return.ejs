@@ -17,8 +17,15 @@
                   // handle the scanned code as you like
                   console.log(`QR matched = ${qrMessage}`);
                   const XHR = new XMLHttpRequest();
-                  XHR.open('POST', './');
+                  XHR.open('POST', '/dashboard/return');
                   XHR.send(qrMessage);
+                  XHR.onreadystatechange=function(){
+                    console.log(XHR.responseText);
+                    if(this.status==200){
+                      console.log("AAFADKFALKD");
+                    }
+                  };
+                  console.log(XHR.response);
               }
 
               function onScanFailure(error) {
