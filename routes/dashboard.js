@@ -2,7 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const QRCode = require('qrcode');
-const moment = require('moment');
 
 // Mongoose model
 const Voter = require('../models/Voter');
@@ -25,23 +24,29 @@ router.get('/checkin/queueUpdate', (req, res) => {
 
 // functionality to add a voter to the queue
 router.post('/checkin', async (req, res) => {
-    // determine if there is an active queue
+    // grab all queues 
     let queueQuery = await Queue.find({});
-    let currentTime = new Date();
 
+    // check that there is a queue
     if (queueQuery.length !== 0) {
+        // get the current time and first queue in the database 
+        let currentTime = new Date();
         let queue = queueQuery[0];
-        // calculate callback based on voting rate and number of people in main queue
-        let dif = Math.round(queue.queueLength * queue.callbackRate / queue.boothCount);
-        let callbackTime = new Date(currentTime.getTime() + dif*60000);
 
-        // create a new voter object
+        // calculate when the callback time should be set to
+        let dif = Math.round(queue.queueLength * queue.callbackRate / queue.boothCount);
+        //let callbackTime = new Date(currentTime.getTime() + dif*60000);
+
+        // create a new voter object with the calculated callback time 
         const newVoter = new Voter({
-            callbackTime
+            callbackTime: currentTime
         });
+
+        // create a voter profile url with the voter's generated mongoDB id 
+        voterURL = 'http://localhost:5000/dashboard/return/' + newVoter._id;        
         
-        // Generate Voter specific QR Code from Voter id
-        QRCode.toDataURL(String(newVoter._id), { type: 'terminal' }, (err, url) => {
+        // Generate QR Code from the URL created before 
+        QRCode.toDataURL(voterURL, { type: 'terminal' }, (err, url) => {
             if (err) {
                 console.log(err);
             }
@@ -50,14 +55,14 @@ router.post('/checkin', async (req, res) => {
             }
         });
 
-        // increase length of queue
+        // increment the queue length
         Queue.findByIdAndUpdate(queue._id, { queueLength: queue.queueLength + 1}, (err) => {
             if (err) {
                 console.log(err);
             } 
         });
 
-        // save the voter to the database 
+        // save the voter to mongoDB 
         newVoter.save()
         .then(voter => {
             req.flash(
@@ -69,6 +74,7 @@ router.post('/checkin', async (req, res) => {
         })
         .catch(err => console.log(err));
     }
+    // otherwise no queue has been set up. So redirect to creation form
     else {
         req.flash(
             'error_msg', 
@@ -165,88 +171,108 @@ router.post('/checkin/queueUpdate', async (req, res) => {
 });
 
 // functinoality to compute rates of returning voters
-router.post('/return', async (req, res) => {
-    const { voterURL } = req.body.url;
-    let returningVoter = await Voter.findById(id=voterURL, (err) => {
+router.post('/return/*', async (req, res) => {
+    // get the url request
+    requestURL = String(req.url);
+    const voterId = requestURL.substring(requestURL.lastIndexOf('/') + 1)
+
+    // search for a voter profile with the same id 
+    let returningVoter = await Voter.findById(id=voterId, (err) => {
         if (err) {
             console.log(err);
         }
     });
 
-    if (!returningVoterQuery) {
-        req.flash(
-            'error_msg', 
-            'This QR Code Does not exists.'
-        );
-        res.redirect('/dashboard/return');
+    // log if no voter exists
+    if (!returningVoter) {
+       console.log('This QR Code Does not exists.');
     }
     else {
-        if (returningVoter.queueType) {
-            let timeDifference = currentTime.getTime() - returningVoter.callbackTime.getTime();
-            let currentTime = Date.now;
+        // get the current time 
+        let currentTime = new Date();
+
+        // check that this is the voters first scan 
+        if (returningVoter.qrScanOne === null) {
+            // query for the currently active queue
+            let queueQuery = await Queue.find({});
+            let queue = queueQuery[0];
+
+            // get the time difference between now and the callbacktime
+            let timeDifference = Math.round((currentTime.getTime() - returningVoter.callbackTime.getTime()) / 60000);
             let errors = [];
 
-            if (timeDifference > 30) {
-                errors.push({ msg: 'You missed your callback time.' });
-            }
-            if (timeDifference < 0) {
-                errors.push({ msg: 'Your callback time has not started.' });
-            }
+            // check that the difference is within the queue range 
+            if (timeDifference > queue.callbackRange) {
+                console.log('You missed your callback time.');
+            } else if (timeDifference < 0) {
+                console.log('Your callback time has not started.');
+            } 
+            // if the voter passes update the mongoDB entries  
+            else {
+                // grab all voters in the second queue
+                let secondQueueVoterQuery = await Voter.find({queueType: false}, (err) => { 
+                    if (err) {
+                        console.log(err);
+                    }
+                });
 
-            if (errors.length > 0) {
-                // Rerender the page and return error messages for flashing
-                res.render('return', {
-                    errors
+                console.log(secondQueueVoterQuery);
+                // determine if no one is in the second queue (edge case)
+                let secondQueueLength = secondQueueVoterQuery.length;
+                if (secondQueueLength === 0) {
+                    secondQueueLength = 1;
+                } 
+
+                // update the voter currently selected 
+                Voter.findByIdAndUpdate(id=returningVoter._id, {qrScanOne: currentTime, queueType: false, queueLength: secondQueueLength})
+                .then(voter => {
+                   console.log('Have have successfully returned.');
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+
+                // decrement the number of people currently in the main queue
+                Queue.findByIdAndUpdate(id=queue._id, {queueLength: queue.queueLength - 1})
+                .then(voter => {
+                    console.log('Main Queue has been decremented.');
+                 })
+                .catch(err => {
+                    console.log(err);
                 });
             }
-            else {
-                returningVoter.qrScanOne = currentTime;
-                returningVoter.queueType = false;
-                returningVoter.queueLength = await Voter.find({queueType: false}, (err) => { if (err) console.log(err); }).length;
-
-
-                returningVoter.save()
-                .then(voter => {
-                    req.flash(
-                        'success_msg', 
-                        'Have have successfully returned.'
-                    );
-                    console.log(voter);
-                    res.redirect('/dashboard/return');
-                })
-                .catch(err => console.log(err));
-            }
         }
+        // otherwise it is there second return
         else {
-            let boothCount = await Queue.find({})[0].boothCount;
-            let queueLength = returningVoter.queueLength;
-            let startTime = returningVoter.qrScanOne;
-            let endTime = Date.now;
+            // calculate the voting rate for this voter
+            let timeDifMili = currentTime.getTime() - returningVoter.qrScanOne.getTime();
+            let timeDifMin = timeDifMili / 60000;
+            let rate = timeDifMin / returningVoter.queueLength;
+            console.log(timeDifMili);
+            console.log(timeDifMin);
 
-
-            // TODO: check rate calculation 
-            let rate = (endTime.getTime() - startTime.getTime()) * boothCount / queueLength;
-
-
+            // create a new rate object 
             const newRate = new Rate({
-                rate
+                voterRate: rate
             });
+
             // save the rate to the database 
             newRate.save()
             .then(rate => {
                 console.log(rate);
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                console.log(err)
+            });
 
+            // delete the voter from the database 
             Voter.findByIdAndRemove(id = returningVoter._id)
-            .then((doc) => {
-                req.flash(
-                    'success_msg', 
-                    'You may now go vote'
-                );
-                res.redirect('/dashboard/return');
-                })
-                .catch(err => console.log(err));
+            .then(() => {
+               console.log('You may now go and vote.');
+            })
+            .catch(err => {
+                console.log(err)
+            });
         }
     }
 });

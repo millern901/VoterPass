@@ -1,42 +1,44 @@
 <div class="row mt-5">
   <div class="col-md-6 m-auto">
 
-    <h1 class="text-center mb-3">
-      <i class="fas fa-user-plus"></i> Set New Queue Parameters
-    </h1>
+    <div class="text-center">
+      <h1> 
+        <i class="fab fa-node-js fa-3x"></i> 
+        <p>Queue Update Form</p>
+      </h1>
+    </div>
 
     <%- include('./partials/messages.ejs') %>
-    <form action="/dashboard/checkin/queueUpdate" method="POST">
-      <div class="form-group">
-        <label for="boothCount">Booth Count</label>
-        <input
-          type="boothCount"
-          id="boothCount"
-          name="boothCount"
-          class="form-control"
-          placeholder="Enter Booth Count"
-          value="<%= typeof boothCount != 'undefined' ? boothCount : '' %>"
-        />
-      </div>
-      <div class="form-group">
-        <label for="callbackRange">Callback Range</label>
-        <input
-          type="callbackRange"
-          id="callbackRange"
-          name="callbackRange"
-          class="form-control"
-          placeholder="Enter Callback Range"
-          value="<%= typeof callbackRange != 'undefined' ? callbackRange : '' %>"
-        />
-      </div>
-      <button type="submit" class="btn btn-primary btn-block"> Update </button>
-    </form>
-        
-    <div class="lead mt-4 text-center">
-      <h1 class="text-center mb-3">
-        <i class="fas fa-retweet"></i> Don't need to Update the Queue?
-      </h1>
-      <a class="btn btn-primary btn-block" href="/dashboard/checkin">Return to Checkin</a>  
+    <div class="card card-body" style="border-width: medium; margin-bottom: 25px;">
+      <form action="/dashboard/checkin/queueUpdate" method="POST">
+        <div class="form-group">
+          <label for="boothCount">Booth Count</label>
+          <input
+            type="boothCount"
+            id="boothCount"
+            name="boothCount"
+            class="form-control"
+            placeholder="Enter Booth Count"
+            value="<%= typeof boothCount != 'undefined' ? boothCount : '' %>"
+          />
+        </div>
+        <div class="form-group">
+          <label for="callbackRange">Callback Range</label>
+          <input
+            type="callbackRange"
+            id="callbackRange"
+            name="callbackRange"
+            class="form-control"
+            placeholder="Enter Callback Range"
+            value="<%= typeof callbackRange != 'undefined' ? callbackRange : '' %>"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block"> Update </button>
+      </form>
+    </div>
+       
+    <div class="text-center">
+      <a class="btn btn-primary btn-block" href="/dashboard/checkin">Return to Queue</a>  
     </div>
 
   </div>

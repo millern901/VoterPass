@@ -15,7 +15,7 @@ const VoterSchema = new mongoose.Schema({
     },
     queueLength: {
         type: Number,
-        default: 0
+        default: 1
     }
 });
 
