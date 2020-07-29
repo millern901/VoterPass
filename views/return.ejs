@@ -1,62 +1,64 @@
 <div class="row mt-5">
   <div class="col-md-6 m-auto">
+    <div class="card card-body text-center"> 
 
-    <div class="text-center">
-      <h1> 
-        <i class="fab fa-node-js fa-3x"></i> 
-        <p>Returning Voter Queue</p>
+      <h1 class="text-center mb-4">
+        <i class="fa fa-camera"></i> Voter Return
       </h1>
+
+      <div class="card card-body">
+        <h5> 
+          <p>To use the QR Code Reader please select a connected Camera and Scan the QR Code in clear view of it.</p>
+        </h5>
+
+        <script src="../modules/html5-qrcode.min.js"></script>
+        <div id="reader"></div>
+        <script>
+          // function executed when a qr code is found
+          function onScanSuccess(qrMessage) {          
+              // handle the scanned code as you like                
+              const Http = new XMLHttpRequest();
+              Http.open('POST', qrMessage);
+              Http.send();
+              Http.onreadystatechange = (e) => { console.log(Http.responseText) }
+              window.location.replace("http://localhost:5000/dashboard/return");
+          }
+
+          // function called on a qr scan failure 
+          function onScanFailure(error) {
+              // we will leave this blank
+          }
+
+          // create a scanner object and render it with success/failure callbacks 
+          let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, true);
+          html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+          
+          // search for valid cameras to view from 
+          Html5Qrcode.getCameras().then(devices => {
+              if (devices && devices.length) {
+                  var cameraId = devices[0].id;
+              }
+          }).catch(err => {
+              console.log(err);
+          });
+
+          // create a new qrcode, messages are not required 
+          const html5QrCode = new Html5Qrcode("reader");
+          html5QrCode.start(cameraId, { fps: 10, qrbox: 250 }, qrCodeMessage => {}, errorMessage => {})
+          .catch(err => {
+              console.log(err);
+          });
+        </script>
+      </div>
+
+      <div class="lead mt-4 text-center">
+        <h6>
+          <p>If you need to proceed back to the Dashboard. please click the link below.</p>
+        </h6>
+        <a class="btn btn-secondary btn-block" href="/dashboard">Return to Dashboard</a>  
+      </div>
+
     </div>
-
-    <div class="card card-body text-center" style="border-width: medium;"> 
-      <h3> 
-        <i class="fa fa-camera"></i> QR Code Reader
-      </h3>
-      <script src="../modules/html5-qrcode.min.js"></script>
-      <div id="reader"></div>
-
-      <script>
-        // function executed when a qr code is found
-        function onScanSuccess(qrMessage) {          
-            // handle the scanned code as you like                
-            const Http = new XMLHttpRequest();
-            Http.open('POST', qrMessage);
-            Http.send();
-            Http.onreadystatechange = (e) => { console.log(Http.responseText) }
-            window.location.replace("http://localhost:5000/dashboard/return");
-        }
-
-        // function called on a qr scan failure 
-        function onScanFailure(error) {
-            // we will leave this blank
-        }
-
-        // create a scanner object and render it with success/failure callbacks 
-        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, true);
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-        
-        // search for valid cameras to view from 
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                var cameraId = devices[0].id;
-            }
-        }).catch(err => {
-            console.log(err);
-        });
-
-        // create a new qrcode, messages are not required 
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(cameraId, { fps: 10, qrbox: 250 }, qrCodeMessage => {}, errorMessage => {})
-        .catch(err => {
-            console.log(err);
-        });
-      </script>
-    </div>
-
-    <div class="lead mt-4 text-center">
-      <a class="btn btn-primary btn-block" href="/dashboard">Return to Dashboard</a>  
-    </div> 
-
   </div>
 </div>
 
