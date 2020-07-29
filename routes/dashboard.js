@@ -35,11 +35,11 @@ router.post('/checkin', async (req, res) => {
 
         // calculate when the callback time should be set to
         let dif = Math.round(queue.queueLength * queue.callbackRate / queue.boothCount);
-        //let callbackTime = new Date(currentTime.getTime() + dif*60000);
+        let callbackLength = new Date(currentTime.getTime() + dif*60000);
 
         // create a new voter object with the calculated callback time 
         const newVoter = new Voter({
-            callbackTime: currentTime
+            callbackTime: callbackLength
         });
 
         // create a voter profile url with the voter's generated mongoDB id 
@@ -190,13 +190,13 @@ router.post('/return/*', async (req, res) => {
     else {
         // get the current time 
         let currentTime = new Date();
+        
+        // query for the currently active queue
+        let queueQuery = await Queue.find({});
+        let queue = queueQuery[0];
 
         // check that this is the voters first scan 
         if (returningVoter.qrScanOne === null) {
-            // query for the currently active queue
-            let queueQuery = await Queue.find({});
-            let queue = queueQuery[0];
-
             // get the time difference between now and the callbacktime
             let timeDifference = Math.round((currentTime.getTime() - returningVoter.callbackTime.getTime()) / 60000);
             let errors = [];
@@ -247,10 +247,7 @@ router.post('/return/*', async (req, res) => {
             // calculate the voting rate for this voter
             let timeDifMili = currentTime.getTime() - returningVoter.qrScanOne.getTime();
             let timeDifMin = timeDifMili / 60000;
-            let rate = timeDifMin / returningVoter.queueLength;
-            console.log(timeDifMili);
-            console.log(timeDifMin);
-
+            let rate = timeDifMin / returningVoter.queueLength / queue.boothCount;
             // create a new rate object 
             const newRate = new Rate({
                 voterRate: rate
@@ -268,7 +265,7 @@ router.post('/return/*', async (req, res) => {
             // delete the voter from the database 
             Voter.findByIdAndRemove(id = returningVoter._id)
             .then(() => {
-               console.log('You may now go and vote.');
+                console.log('You may now go and vote.');
             })
             .catch(err => {
                 console.log(err)
