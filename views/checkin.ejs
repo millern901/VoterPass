@@ -1,32 +1,33 @@
 <div class="row mt-5">
   <div class="col-md-6 m-auto">
+    <div class="card card-body">
 
-    <div class="text-center">
-      <h1> 
-        <i class="fab fa-node-js fa-3x"></i> 
-        <p>Voting Queue</p>
+      <h1 class="text-center mb-3">
+        <i class="fab fa-node-js"></i> Voting Queue
       </h1>
-    </div>
 
-    <div class="lead mt-4 text-center" style="margin-bottom: 25px;">
-      <a class="btn btn-primary btn-block" href="/dashboard">Main Dashboard</a> 
-      <a class="btn btn-primary btn-block" href="/dashboard/checkin/queueUpdate">Update Queue</a>
-    </div>
-    
-    <div class="card card-body" style="border-width: medium;">
-      <div class="text-center">
-        <h3> 
-          <i class="fa fa-share-square fa-1x"></i> 
-          <p>Ticket Generation</p>
-        </h3>
+      <div class="card card-body">
+        <div class="text-center">
+          <h3> 
+            <i class="fa fa-share-square fa-1x"></i> 
+            <p>Ticket Generation</p>
+          </h3>
+        </div>
+        <%- include('./partials/messages.ejs') %>
+        <form action="/dashboard/checkin/" method="POST">
+            <button type="submit" class="btn btn-primary btn-block">Add a New Voter</button>
+        </form>
       </div>
-      <%- include('./partials/messages.ejs') %>
-      <form action="/dashboard/checkin/" method="POST">
-          <button type="submit" class="btn btn-primary btn-block">Add New Voter</button>
-      </form>
+
+      <div class="lead mt-4 text-center">
+        <h6>
+          <p>If the Queue needs to be Updated Please use the First Link to do so. Otherwise, you may continue Adding Voters to the Queue or Return the the Dashboard.</p>
+        </h6>
+        <a class="btn btn-secondary btn-block" href="/dashboard/checkin/queueUpdate">Update Queue</a>
+        <a class="btn btn-secondary btn-block" href="/dashboard">Dashboard</a> 
+      </div>
+
     </div>
-
-
   </div>
 </div>
 

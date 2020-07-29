@@ -1,9 +1,15 @@
 <div class="row mt-5">
-    <div class="col-md-6 m-auto">
-      <div class="card card-body">
-        <h1 class="text-center mb-3">
-          <i class="fas fa-user-plus"></i> Set Master Account to Start the System
-        </h1>
+  <div class="col-md-6 m-auto">
+    <div class="card card-body">
+
+      <h1 class="text-center mb-3">
+        <i class="fas fa-desktop"></i> System Startup
+      </h1>
+
+      <div class="card card-body"> 
+        <h4 class="text-center">
+          <i></i>Master Admin Register Form
+        </h4>
         <%- include('./partials/messages.ejs') %>
         <form action="/admin/startup" method="POST">
           <div class="form-group">
@@ -39,11 +45,18 @@
               value="<%= typeof password2 != 'undefined' ? password2 : '' %>"
             />
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Start Up</button>
+          <button type="submit" class="btn btn-primary btn-block">Startup</button>
         </form>
-        <div class="lead mt-4 text-center">
-          <a class="btn btn-primary btn-block" href="/admin/login">Back to Login</a>  
-        </div>
       </div>
+
+      <div class="lead mt-4 text-center">
+        <h6>
+          <p>If VoterPass has alredy been Setup, you may go Register a new Admin to the System or Log into the Application.</p>
+        </h6>
+        <a class="btn btn-secondary btn-block" href="/admin/register">Register</a>  
+        <a class="btn btn-secondary btn-block" href="/admin/login">Login</a>  
+      </div>
+
     </div>
   </div>
+</div>
