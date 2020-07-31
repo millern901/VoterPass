@@ -6,13 +6,12 @@
         <i class="fa fa-camera"></i> Voter Return
       </h1>
 
-      <div class="card card-body">
-        <h5> 
-          <p>To use the QR Code Reader please select a connected Camera and Scan the QR Code in clear view of it.</p>
-        </h5>
-
-        <script src="../modules/html5-qrcode.min.js"></script>
-        <div id="reader"></div>
+    <div class="card card-body text-center" style="border-width: medium;"> 
+      <h3> 
+        <i class="fa fa-camera"></i> QR Code Reader
+      </h3>
+      <script src="../modules/html5-qrcode.min.js"></script>
+      <div id="reader"></div>
         <script>
           let previousScan = null;
           // function executed when a qr code is found
@@ -27,10 +26,32 @@
               }
           }
 
-          // function called on a qr scan failure 
-          function onScanFailure(error) {
-              // we will leave this blank
-          }
+        // function called on a qr scan failure 
+        function onScanFailure(error) {
+            // we will leave this blank
+        }
+
+        // create a scanner object and render it with success/failure callbacks 
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, true);
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        
+        // search for valid cameras to view from 
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                var cameraId = devices[0].id;
+            }
+        }).catch(err => {
+            console.log(err);
+        });
+
+        // create a new qrcode, messages are not required 
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(cameraId, { fps: 10, qrbox: 250 }, qrCodeMessage => {}, errorMessage => {})
+        .catch(err => {
+            console.log(err);
+        });
+      </script>
+    </div>
 
           // create a scanner object and render it with success/failure callbacks 
           let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, true);

@@ -172,6 +172,7 @@ router.post('/checkin/queueUpdate', async (req, res) => {
         }
     }
 });
+
 // functinoality to compute rates of returning voters
 router.post('/return/*', async (req, res) => {
     // get the url request
