@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const VoterSchema = new mongoose.Schema({
-    callbackTime: {
+    callbackStart: {
         type: Date,
-        default: Date.now      
+        required: true
     },
-    queueType: {
-        type: Boolean,
-        default: true
+    callbackEnd: {
+        type: Date,
+        required: true
     },
     qrScanOne: {
         type: Date,

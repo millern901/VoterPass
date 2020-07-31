@@ -18,14 +18,13 @@
           // function executed when a qr code is found
           function onScanSuccess(qrMessage) {          
               // handle the scanned code as you like 
-              if(qrMessage != previousScan || previousScan == null) {               
+              if(qrMessage != previousScan) {               
                 const Http = new XMLHttpRequest();
                 Http.open('POST', qrMessage);
                 Http.send();
                 Http.onreadystatechange = (e) => { console.log(Http.responseText) }
                 previousScan = qrMessage;
               }
-              //window.location.replace("http://localhost:5000/dashboard/return");
           }
 
           // function called on a qr scan failure 

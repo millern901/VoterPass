@@ -14,7 +14,11 @@ const QueueSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    queueLength: {
+    queueOneLength: {
+        type: Number,
+        default: 0
+    },
+    queueTwoLength: {
         type: Number,
         default: 0
     }
