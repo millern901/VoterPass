@@ -2,6 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const QRCode = require('qrcode');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
 // Mongoose model
 const Voter = require('../models/Voter');
@@ -49,10 +51,17 @@ router.post('/checkin', async (req, res) => {
     voterURL = 'http://localhost:5000/dashboard/return/' + newVoter._id;        
     
     // Generate QR Code from the URL created before 
+    /*
+    let voterQRCode;
     QRCode.toDataURL(voterURL, { type: 'terminal' })
     .then(url => {
-        console.log(url);
+        voterQRCode = url;
     })
+    .catch(err => {
+        console.log(err);
+    });
+    */
+   const voterQRCode = await QRCode.toFile('./ticket/voter-qr-code.png', voterURL)
     .catch(err => {
         console.log(err);
     });
@@ -78,7 +87,25 @@ router.post('/checkin', async (req, res) => {
     .catch(err => { 
         console.log(err);
     });
+
+    // create voting ticket pdf and route it to the tickets directory
+    const doc = new PDFDocument;
+    doc.pipe(fs.createWriteStream('./ticket/voter-ticket.pdf'));
+
+    // Embed a font, set the font size, and render some text
+    doc.fontSize(12)
+    .text(`Callback Time Start:\n ${newVoter.callbackStart} \n\n Callback Time End:\n ${newVoter.callbackEnd}`, 100, 100);
+
+
+    // Add an image, constrain it to a given size, and center it vertically and horizontally
+    doc.image('./ticket/voter-qr-code.png', {
+        align: 'center',
+        valign: 'center'
+    });
+
+    doc.end();
 });
+
 // functionality to update the queue
 router.post('/update', async (req, res) => {
     // Get request body 
