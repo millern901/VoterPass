@@ -1,0 +1,41 @@
+<div style="background-color:rgb(233, 233, 236); border-color: rgb(75, 72, 72); border-width: thin; border-style: solid;">
+  <%- include('./partials/dashnav.ejs') %>
+
+  <h1 class="text-center mb-3" style="margin-top: 15px;">
+    <i class="fa fa-wrench"></i> Queue Fixer
+  </h1>
+
+  <div class="card text-white bg-secondary mb-3" style="width: 50%; margin-left: 25%; margin-bottom: 15px; background-color: rgb(255, 255, 255);">
+    <div class="card-header">Update Form</div>
+    <div class="card-body">
+      <%- include('./partials/messages.ejs') %>
+      <form action="/dashboard/update" method="POST">
+        <div class="form-group">
+          <label for="boothCount">Booth Count</label>
+          <input
+            type="boothCount"
+            id="boothCount"
+            name="boothCount"
+            class="form-control"
+            placeholder="Enter Booth Count"
+            value="<%= typeof boothCount != 'undefined' ? boothCount : '' %>"
+          />
+        </div>
+        <div class="form-group">
+          <label for="callbackRange">Callback Range</label>
+          <input
+            type="callbackRange"
+            id="callbackRange"
+            name="callbackRange"
+            class="form-control"
+            placeholder="Enter Callback Range"
+            value="<%= typeof callbackRange != 'undefined' ? callbackRange : '' %>"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block"> Update </button>
+      </form>
+    </div>
+  </div>
+
+  <%- include('./partials/footer.ejs') %>
+</div>

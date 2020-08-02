@@ -1,34 +1,30 @@
-<div class="row mt-5">
-    <div class="col-md-6 m-auto">
-        <div class="card card-body text-center">
+<div style="background-color:rgb(233, 233, 236); border-color: rgb(75, 72, 72); border-width: thin; border-style: solid;">
+    <%- include('./partials/dashnav.ejs') %>
 
-            <h1 class="text-center mb-3">
-                <i class="fa fa-home fa-3x"></i> 
-                <p>VoterPass Dashboard</p>
-            </h1>
+    <h1 class="text-center mb-3" style="margin-top: 15px;">
+        <i class="fa fa-home fa-2x"></i> Voter Pass Dashboard
+    </h1>
 
-            <div style="margin-bottom: 25px; display: flex; justify-content: space-between;">
-                <div style="flex-basis: 48%;">
-                    <div class="card card-body text-center">
-                        <h4>Checkins</h4>
-                        <a class="btn btn-primary btn-block" style="width: 75%; margin-left: 12%;" href="/dashboard/checkin">Main</a>  
-                    </div>
-                </div>
-                <div style="flex-basis: 48%;">
-                    <div class="card card-body text-center">
-                        <h4>Returns</h4>
-                        <a class="btn btn-primary btn-block" style="width: 75%; margin-left: 12%;" href="/dashboard/return">Callback</a>
-                    </div>
+    <div style="margin-bottom: 25px; display: flex; justify-content: space-between;">
+        <div style="flex-basis: 48%;">
+            <div class="card text-white bg-secondary mb-3" style="margin-left: 15px;">
+                <div class="card-header">Header</div>
+                <div class="card-body">
+                  <h4 class="card-title">Secondary card title</h4>
+                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
                 </div>
             </div>
-
-            <div class="lead mt-4 text-center">
-                <h6>
-                  <p>If you need to Register a new Admin or Leave, please Logout and if applicable proceed to the Registration Page.</p>
-                </h6>
-                <a href="/admin/logout" class="btn btn-secondary btn-block" style="width: 50%; margin-left: 25%;"> Logout </a>
-            </div>
-           
+        </div>
+        <div style="flex-basis: 48%;">
+            <div class="card text-white bg-secondary mb-3" style="margin-right: 15px;">
+                <div class="card-header">Header</div>
+                <div class="card-body">
+                  <h4 class="card-title">Secondary card title</h4>
+                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                </div>
+              </div>
         </div>
     </div>
+
+    <%- include('./partials/footer.ejs') %>
 </div>

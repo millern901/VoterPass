@@ -1,49 +1,45 @@
-<div class="row mt-5">
-  <div class="col-md-6 m-auto">
-    <div class="card card-body">
+<div style="background-color:rgb(233, 233, 236); border-color: rgb(75, 72, 72); border-width: thin; border-style: solid;">
+  <%- include('./partials/welcomenav.ejs') %>
 
-      <h1 class="text-center mb-3">
-        <i class="fas fa-sign-in-alt"></i> Admin Login
-      </h1>
+  <h1 class="text-center mb-3" style="margin-top: 15px;">
+    <i class="fas fa-sign-in-alt fa-2x"></i> Admin Login
+  </h1>
 
-      <div class="card card-body">
-        <h4 class="text-center">
-          <i></i>Login Form
-        </h4>
-        <%- include('./partials/messages.ejs') %>
-        <form action="/admin/login" method="POST">
-          <div class="form-group">
-            <label for="name">Name</label>
-            <input
-              type="name"
-              id="name"
-              name="name"
-              class="form-control"
-              placeholder="Enter Name"
-            />
-          </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              class="form-control"
-              placeholder="Enter Password"
-            />
-          </div>
-          <button type="submit" class="btn btn-primary btn-block">Login</button>
-        </form>
-      </div>
-
-      <div class="lead mt-4 text-center">
-        <h6>
-          <p>If VoterPass has not been Setup, please Startup the System by Sreating a Master Admin Account. Otherwise, if you do not have a Account please go Register.</p>
-        </h6>
-        <a class="btn btn-secondary btn-block" href="/admin/startup">Startup</a>  
-        <a class="btn btn-secondary btn-block" href="/admin/register">Register</a>  
-      </div>
-
+  <div class="card text-white bg-secondary mb-3" style="width: 50%; margin-left: 25%; margin-bottom: 15px; background-color: rgb(255, 255, 255);">
+    <div class="card-header">Login Form</div>
+    <div class="card-body">
+      <%- include('./partials/messages.ejs') %>
+      <form action="/admin/login" method="POST">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input
+            type="name"
+            id="name"
+            name="name"
+            class="form-control"
+            placeholder="Enter Name"
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-control"
+            placeholder="Enter Password"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+      </form>
     </div>
   </div>
+
+  <%- include('./partials/footer.ejs') %>
 </div>
+
+
+
+
+
+

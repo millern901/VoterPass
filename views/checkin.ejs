@@ -1,34 +1,40 @@
-<div class="row mt-5">
-  <div class="col-md-6 m-auto">
-    <div class="card card-body">
+<div style="background-color:rgb(233, 233, 236); border-color: rgb(75, 72, 72); border-width: thin; border-style: solid;">
+  <%- include('./partials/dashnav.ejs') %>
 
-      <h1 class="text-center mb-3">
-        <i class="fab fa-node-js"></i> Voting Queue
-      </h1>
+  <h1 class="text-center mb-3" style="margin-top: 15px;">
+      <i class="fa fa-home fa-2x"></i> Voter Pass Queue
+  </h1>
 
-      <div class="card card-body">
-        <div class="text-center">
-          <h3> 
-            <i class="fa fa-share-square fa-1x"></i> 
-            <p>Ticket Generation</p>
-          </h3>
+  <p class="lead">To add a voter to the queue, just press the button below to generate a ticket. 
+                  If a queue has not been set up, you will be redirected to a page where you may do just that!</p>
+
+  <%- include('./partials/messages.ejs') %>
+  <div style="margin-bottom: 25px; display: flex; justify-content: space-between;">
+    <div style="flex-basis: 48%;">
+        <div class="card text-white bg-secondary mb-3" style="margin-left: 15px;">
+            <div class="card-header">Current Callback Time</div>
+            <div class="card-body">
+              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+            </div>
+          </div>
+    </div>
+    <div style="flex-basis: 48%;">
+        <div class="card text-white bg-secondary mb-3" style="margin-right: 15px;">
+          <div class="card-header">Generate Ticket</div>
+          <div class="card-body">
+            <form action="/dashboard/checkin/" method="POST">
+                <button type="submit" class="btn btn-primary btn-block">Add Voter</button>
+            </form> 
+          </div>
         </div>
-        <%- include('./partials/messages.ejs') %>
-        <form action="/dashboard/checkin/" method="POST">
-            <button type="submit" class="btn btn-primary btn-block">Add a New Voter</button>
-        </form>
-      </div>
-
-      <div class="lead mt-4 text-center">
-        <h6>
-          <p>If the Queue needs to be Updated Please use the First Link to do so. Otherwise, you may continue Adding Voters to the Queue or Return the the Dashboard.</p>
-        </h6>
-        <a class="btn btn-secondary btn-block" href="/dashboard/checkin/queueUpdate">Update Queue</a>
-        <a class="btn btn-secondary btn-block" href="/dashboard">Dashboard</a> 
-      </div>
-
     </div>
   </div>
+
+  <%- include('./partials/footer.ejs') %>
 </div>
+
+
+
+
 
 

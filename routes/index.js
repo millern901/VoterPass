@@ -6,7 +6,7 @@ const { ensureAuthenticated, forwardAuthenticated } = require('../config/auth');
 
 // Set routing for startup/login/register without authentication
 router.get('/', forwardAuthenticated, (req, res) => {
-    res.render('welcome');
+    res.render('startup');
 });
 
 // Set routing for admin dashboard with authentication 

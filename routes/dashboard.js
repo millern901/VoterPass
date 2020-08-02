@@ -18,8 +18,11 @@ router.get('/checkin', (req, res) => {
 router.get('/return', (req, res) => {
     res.render('return');
 });
-router.get('/checkin/queueUpdate', (req, res) => {
-    res.render('queueUpdate');
+router.get('/update', (req, res) => {
+    res.render('update');
+});
+router.get('/help', (req, res) => {
+    res.render('help');
 });
 
 // functionality to add a voter to the queue
@@ -27,68 +30,57 @@ router.post('/checkin', async (req, res) => {
     // grab all queues 
     let queueQuery = await Queue.find({});
 
-    // check that there is a queue
-    if (queueQuery.length !== 0) {
-        // get the current time and first queue in the database 
-        let currentTime = new Date();
-        let queue = queueQuery[0];
+    // get the current time and first queue in the database 
+    let currentTime = new Date();
+    let queue = queueQuery[0];
 
-        // calculate when the callback time should be set to
-        let dif = Math.round(queue.callbackRate * (queue.queueOneLength / queue.boothCount));
-        let callbackStart = new Date(currentTime.getTime() + dif*60000);
-        let callbackEnd = new Date(callbackStart.getTime() + (queue.callbackRange)*60000);
+    // calculate when the callback time should be set to
+    let dif = Math.round(queue.callbackRate * (queue.queueOneLength / queue.boothCount));
+    let callbackStart = new Date(currentTime.getTime() + dif*60000);
+    let callbackEnd = new Date(callbackStart.getTime() + (queue.callbackRange)*60000);
 
-        // create a new voter object with the calculated callback time 
-        const newVoter = new Voter({
-            callbackStart: callbackStart,
-            callbackEnd: callbackEnd
-        });
+    // create a new voter object with the calculated callback time 
+    const newVoter = new Voter({
+        callbackStart: callbackStart,
+        callbackEnd: callbackEnd
+    });
 
-        // create a voter profile url with the voter's generated mongoDB id 
-        voterURL = 'http://localhost:5000/dashboard/return/' + newVoter._id;        
-        
-        // Generate QR Code from the URL created before 
-        QRCode.toDataURL(voterURL, { type: 'terminal' })
-        .then(url => {
-            console.log(url);
-        })
-        .catch(err => {
-            console.log(err);
-        });
+    // create a voter profile url with the voter's generated mongoDB id 
+    voterURL = 'http://localhost:5000/dashboard/return/' + newVoter._id;        
+    
+    // Generate QR Code from the URL created before 
+    QRCode.toDataURL(voterURL, { type: 'terminal' })
+    .then(url => {
+        console.log(url);
+    })
+    .catch(err => {
+        console.log(err);
+    });
 
-        // increment the queue length
-        Queue.findByIdAndUpdate(queue._id, { queueOneLength: queue.queueOneLength + 1})
-        .then(doc => {
-            console.log('Queue 1 Length Incremented');
-        })
-        .catch(err => {
-            console.log(err);
-        });
+    // increment the queue length
+    Queue.findByIdAndUpdate(queue._id, { queueOneLength: queue.queueOneLength + 1})
+    .then(doc => {
+        console.log('Queue 1 Length Incremented');
+    })
+    .catch(err => {
+        console.log(err);
+    });
 
-        // save the voter to mongoDB 
-        newVoter.save()
-        .then(voter => {
-            req.flash(
-                'success_msg', 
-                'Voter has been Added to the Queue.'
-            );
-            res.redirect('/dashboard/checkin');
-        })
-        .catch(err => { 
-            console.log(err);
-        });
-    }
-    // otherwise no queue has been set up. So redirect to creation form
-    else {
+    // save the voter to mongoDB 
+    newVoter.save()
+    .then(voter => {
         req.flash(
-            'error_msg', 
-            'Please Setup a Queue before Adding Voters.'
+            'success_msg', 
+            'Voter has been Added to the Queue.'
         );
-        res.redirect('/dashboard/checkin/queueUpdate');
-    }
+        res.redirect('/dashboard/checkin');
+    })
+    .catch(err => { 
+        console.log(err);
+    });
 });
 // functionality to update the queue
-router.post('/checkin/queueUpdate', async (req, res) => {
+router.post('/update', async (req, res) => {
     // Get request body 
     const { boothCount, callbackRange } = req.body;
     // initialize error list
@@ -105,7 +97,7 @@ router.post('/checkin/queueUpdate', async (req, res) => {
     // Determine if any errors were encountered 
     if (errors.length > 0) {
         // Rerender the page and return error messages for flashing
-        res.render('queueUpdate', {
+        res.render('update', {
             errors,
             boothCount
         });

@@ -1,36 +1,35 @@
-<div class="row mt-5">
-  <div class="col-md-6 m-auto">
-    <div class="card card-body text-center"> 
+<div style="background-color:rgb(233, 233, 236); border-color: rgb(75, 72, 72); border-width: thin; border-style: solid;">
+  <%- include('./partials/dashnav.ejs') %>
 
-      <h1 class="text-center mb-4">
-        <i class="fa fa-camera"></i> Voter Return
-      </h1>
+  <h1 class="text-center mb-3" style="margin-top: 15px;">
+    <i class="fa fa-camera"></i> Voter Return
+  </h1>
 
-    <div class="card card-body text-center" style="border-width: medium;"> 
-      <h3> 
-        <i class="fa fa-camera"></i> QR Code Reader
-      </h3>
+  <div class="card text-white bg-secondary mb-3" style="width: 75%; margin-left: 12.5%; margin-bottom: 15px; background-color: rgb(255, 255, 255);">
+    <div class="card-header">QR Code Reader</div>
+    <div class="card-body">
+      <%- include('./partials/messages.ejs') %>
       <script src="../modules/html5-qrcode.min.js"></script>
-      <div id="reader"></div>
-        <script>
-          let previousScan = null;
-          // function executed when a qr code is found
-          function onScanSuccess(qrMessage) {          
-              // handle the scanned code as you like 
-              if(qrMessage != previousScan) {               
-                const Http = new XMLHttpRequest();
-                Http.open('POST', qrMessage);
-                Http.send();
-                Http.onreadystatechange = (e) => { console.log(Http.responseText) }
-                previousScan = qrMessage;
-              }
-          }
-
+      <div id="reader" style="width: 50%; margin-left: 25%; background-color: rgb(255, 255, 255);"></div>
+      <script>
+        let previousScan = null;
+        // function executed when a qr code is found
+        function onScanSuccess(qrMessage) {          
+            // handle the scanned code as you like 
+            if(qrMessage != previousScan) {               
+              const Http = new XMLHttpRequest();
+              Http.open('POST', qrMessage);
+              Http.send();
+              Http.onreadystatechange = (e) => { console.log(Http.responseText) }
+              previousScan = qrMessage;
+            }
+        }
+    
         // function called on a qr scan failure 
         function onScanFailure(error) {
             // we will leave this blank
         }
-
+    
         // create a scanner object and render it with success/failure callbacks 
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, true);
         html5QrcodeScanner.render(onScanSuccess, onScanFailure);
@@ -43,7 +42,7 @@
         }).catch(err => {
             console.log(err);
         });
-
+    
         // create a new qrcode, messages are not required 
         const html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start(cameraId, { fps: 10, qrbox: 250 }, qrCodeMessage => {}, errorMessage => {})
@@ -52,37 +51,9 @@
         });
       </script>
     </div>
-
-          // create a scanner object and render it with success/failure callbacks 
-          let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, true);
-          html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-          
-          // search for valid cameras to view from 
-          Html5Qrcode.getCameras().then(devices => {
-              if (devices && devices.length) {
-                  var cameraId = devices[0].id;
-              }
-          }).catch(err => {
-              console.log(err);
-          });
-
-          // create a new qrcode, messages are not required 
-          const html5QrCode = new Html5Qrcode("reader");
-          html5QrCode.start(cameraId, { fps: 10, qrbox: 250 }, qrCodeMessage => {}, errorMessage => {})
-          .catch(err => {
-              console.log(err);
-          });
-        </script>
-      </div>
-
-      <div class="lead mt-4 text-center">
-        <h6>
-          <p>If you need to proceed back to the Dashboard. please click the link below.</p>
-        </h6>
-        <a class="btn btn-secondary btn-block" href="/dashboard">Return to Dashboard</a>  
-      </div>
-
-    </div>
   </div>
+
+  <%- include('./partials/footer.ejs') %>
 </div>
+
 

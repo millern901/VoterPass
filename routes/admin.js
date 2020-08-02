@@ -7,8 +7,12 @@ const bcrypt = require('bcryptjs');
 // Login dependency
 const passport = require('passport');
 
-// Load mongoose admin schema
+// Mongoose models
+const Voter = require('../models/Voter');
+const Queue = require('../models/Queue')
+const Rate = require('../models/Rate');
 const Admin = require('../models/Admin');
+
 // Load authentication 
 const { forwardAuthenticated } = require('../config/auth');
 
@@ -26,17 +30,15 @@ router.get('/register', forwardAuthenticated, (req, res) => {
 // Handle VoterPass Startup
 router.post('/startup', async (req, res) => {
     // Get request body 
-    const { name, password, password2 } = req.body;
+    const { name, password, password2, boothCount, callbackRange } = req.body;
     // initialize error list
     let errors = [];
 
     // Check that the system hasn't been started 
     const masterAdmin = await Admin.findOne({ clearance: true });
-    if (masterAdmin) {
-        errors.push({ msg: 'System has already been started. Please login.' });
-    }
+    
     // Check that all form fields have been filled
-    if (!name || !password || !password2) {
+    if (!name || !password || !password2 || !boothCount || !callbackRange) {
         errors.push({ msg: 'All fields must be filled' });
     }
     // Check that both passwords match 
@@ -50,6 +52,10 @@ router.post('/startup', async (req, res) => {
             errors.push({ msg: 'Password too weak.' });
         }
     }
+    // Check there is atleast on booth  
+    if (boothCount <= 0) {
+        errors.push({ msg: 'You must have atleast one Active Booth.' });
+    }
     // Determine if any errors were encountered 
     if (errors.length > 0) {
         // Rerender the page and return error messages for flashing
@@ -60,14 +66,59 @@ router.post('/startup', async (req, res) => {
             password2
         });
     }
+    else if (masterAdmin) {
+        // Flash system already startup 
+        req.flash(
+            'error_msg', 
+            'System has already been Started.'
+        );
+        // redirect admin to login page 
+        res.redirect('/admin/login');
+    }
     else {
+        // calculate rate from all rates inside of the Rates collection
+        let rateQuery = await Rate.find({})
+        .then(rates => {
+            console.log(rates);
+        })
+        .catch(err => {
+            console.log(err);
+        });
+        let callbackRate = 5;
+
+        // if we have some rates average them for new callback rate
+        if (rateQuery) {
+            let totalRate = 0;
+            rateQuery.forEach(rate => {
+                totalRate += rate.voterRate;
+            });
+            callbackRate = totalRate / rateQuery.length;
+        }
+
+        // create a new queue object
+        const newQueue = new Queue({
+            boothCount: boothCount,
+            callbackRate: callbackRate,
+            callbackRange: callbackRange
+        });
+
+        // save the queue to the database
+        await newQueue.save()
+        .then(queue => {
+            console.log(queue);
+        })
+        .catch(err => {
+            console.log(err)
+        });
+
         // Create a new admin object
         const newAdmin = new Admin({
             name: name,
             password: password,
             clearance: true
         });
-        // Hash the entered password
+
+        // Hash the entered password and save the admin 
         bcrypt.genSalt(10, (err, salt) => { 
             bcrypt.hash(newAdmin.password, salt, (err, hash) => {
                 if (err) {
