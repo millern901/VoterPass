@@ -2,7 +2,7 @@
   <%- include('./partials/dashnav.ejs') %>
 
   <h1 class="text-center mb-3" style="margin-top: 15px;">
-    <i class="fa fa-wrench"></i> Queue Fixer
+    <i class="fa fa-wrench"></i> Queue Settings
   </h1>
 
   <div class="card text-white bg-secondary mb-3" style="width: 50%; margin-left: 25%; margin-bottom: 15px; background-color: rgb(255, 255, 255);">
@@ -21,6 +21,7 @@
             value="<%= typeof boothCount != 'undefined' ? boothCount : '' %>"
           />
         </div>
+        <!--
         <div class="form-group">
           <label for="callbackRange">Callback Range</label>
           <input
@@ -32,6 +33,7 @@
             value="<%= typeof callbackRange != 'undefined' ? callbackRange : '' %>"
           />
         </div>
+        -->
         <button type="submit" class="btn btn-primary btn-block"> Update </button>
       </form>
     </div>

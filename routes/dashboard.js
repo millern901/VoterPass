@@ -106,7 +106,7 @@ router.post('/checkin', async (req, res) => {
     doc.end();
 });
 
-// functionality to update the queue
+// functionality to update the queue settings
 router.post('/update', async (req, res) => {
     // Get request body 
     const { boothCount, callbackRange } = req.body;
