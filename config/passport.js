@@ -1,35 +1,31 @@
 // passport code found at: http://www.passportjs.org/docs/username-password/
 
-// Strategy dependency
+// dependencies
 const LocalStrategy = require('passport-local').Strategy;
-// Encrpyting dependency
 const bcrypt = require('bcryptjs');
 
-// Load mongoose admin schema 
+// mongoose schema 
 const Admin = require('../models/Admin');
 
 module.exports = passport => {
     passport.use(
-        // Create a new local strategy
-        new LocalStrategy({ usernameField: 'name' }, (name, password, done) => {
-            // Locate admin
-            Admin.findOne({ name: name })
+        // create a new local strategy
+        new LocalStrategy({ usernameField: 'username' }, (username, password, done) => {
+            // locate admin
+            Admin.findOne({ username: username })
             .then(admin => {
                 if (!admin) {
-                    // Admin does not exist 
-                    return done(null, false, { message: 'Admin Name Not Found' });
+                    // admin does not exist 
+                    return done(null, false, { message: 'Admin not found' });
                 } 
-                // Compare admin passwords 
+                // compare passwords 
                 bcrypt.compare(password, admin.password, (err, isMatch) => {
-                    if (err) {
-                        console.log(err);
-                    }
                     if (isMatch) {
-                        // Passwords match, allow login
+                        // passwords match, allow login
                         return done(null, admin);
                     } else {
-                        // Passwords do not match, disallow login
-                        return done(null, false, { message: 'Admin Password Incorrect' });
+                        // passwords don't match, disallow login
+                        return done(null, false, { message: 'Login information is incorrect' });
                     }
                 });
             })

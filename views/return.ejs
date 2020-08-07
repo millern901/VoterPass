@@ -10,19 +10,27 @@
     <div class="card-body">
       <%- include('./partials/messages.ejs') %>
       <script src="../modules/html5-qrcode.min.js"></script>
+      <script src="../modules/sweetalert.min.js"></script>
+
       <div id="reader" style="width: 50%; margin-left: 25%; background-color: rgb(255, 255, 255);"></div>
       <script>
         let previousScan = null;
         // function executed when a qr code is found
         function onScanSuccess(qrMessage) {          
-            // handle the scanned code as you like 
-            if(qrMessage != previousScan) {               
-              const Http = new XMLHttpRequest();
-              Http.open('POST', qrMessage);
-              Http.send();
-              Http.onreadystatechange = (e) => { console.log(Http.responseText) }
-              previousScan = qrMessage;
+          // handle the scanned code as you like 
+          if(qrMessage != previousScan) {               
+            const Http = new XMLHttpRequest();
+            Http.open('POST', qrMessage);
+            Http.send();
+            Http.onreadystatechange = (e) => { 
+              swal({
+                title: Http.responseText,
+                text: "Response from System",
+                icon: "info"
+              });
             }
+            previousScan = qrMessage;
+          }
         }
     
         // function called on a qr scan failure 

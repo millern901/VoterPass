@@ -2,15 +2,7 @@
 const mongoose = require('mongoose');
 
 const QueueSchema = new mongoose.Schema({
-    boothCount: {
-        type: Number,
-        required: true
-    },
     callbackRate: {
-        type: Number,
-        required: true
-    },
-    callbackRange: {
         type: Number,
         required: true
     },
@@ -21,6 +13,10 @@ const QueueSchema = new mongoose.Schema({
     queueTwoLength: {
         type: Number,
         default: 0
+    },
+    dateCreated: {
+        type: Date,
+        default: Date.now()
     }
 });
 

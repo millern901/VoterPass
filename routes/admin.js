@@ -1,22 +1,19 @@
-// Routing dependencies 
+// dependencies 
 const express = require('express');
 const router = express.Router();
-// Password dependencies 
 const passwordStrength = require('check-password-strength');
 const bcrypt = require('bcryptjs');
-// Login dependency
 const passport = require('passport');
 
-// Mongoose models
-const Voter = require('../models/Voter');
+// forward authentication 
+const { forwardAuthenticated } = require('../config/auth');
+
+// mongoose schemas
 const Queue = require('../models/Queue')
 const Rate = require('../models/Rate');
 const Admin = require('../models/Admin');
 
-// Load authentication 
-const { forwardAuthenticated } = require('../config/auth');
-
-// Startup page get request 
+// admin webpage get requests
 router.get('/startup', forwardAuthenticated, (req, res) => {
     res.render('startup');
 });
@@ -27,221 +24,220 @@ router.get('/register', forwardAuthenticated, (req, res) => {
     res.render('register');
 });
 
-// Handle VoterPass Startup
+// admin startup request
 router.post('/startup', async (req, res) => {
-    // Get request body 
-    const { name, password, password2, boothCount, callbackRange } = req.body;
-    // initialize error list
-    let errors = [];
+    // locate admins (i.e. system started)
+    const adminQuery = await Admin.find({});
 
-    // Check that the system hasn't been started 
-    const masterAdmin = await Admin.findOne({ clearance: true });
-    
-    // Check that all form fields have been filled
-    if (!name || !password || !password2 || !boothCount || !callbackRange) {
-        errors.push({ msg: 'All fields must be filled' });
-    }
-    // Check that both passwords match 
-    if (password !== password2) {
-        errors.push({ msg: 'Passwords do not match.' });
-    }
-    // Check that the password is strong enough
-    if (password) {
-        let passStrength = passwordStrength(password); 
-        if (passStrength.id === 0) {
-            errors.push({ msg: 'Password too weak.' });
-        }
-    }
-    // Check there is atleast on booth  
-    if (boothCount <= 0) {
-        errors.push({ msg: 'You must have atleast one Active Booth.' });
-    }
-    // Determine if any errors were encountered 
-    if (errors.length > 0) {
-        // Rerender the page and return error messages for flashing
-        res.render('startup', {
-            errors,
-            name,
-            password,
-            password2
-        });
-    }
-    else if (masterAdmin) {
-        // Flash system already startup 
+    if (adminQuery.length !== 0) {
+        // flash message and redirect on valid system
         req.flash(
             'error_msg', 
-            'System has already been Started.'
+            'System has already been started.'
         );
-        // redirect admin to login page 
         res.redirect('/admin/login');
     }
     else {
-        // calculate rate from all rates inside of the Rates collection
-        let rateQuery = await Rate.find({})
-        .then(rates => {
-            console.log(rates);
-        })
-        .catch(err => {
-            console.log(err);
-        });
-        let callbackRate = 5;
-
-        // if we have some rates average them for new callback rate
-        if (rateQuery) {
-            let totalRate = 0;
-            rateQuery.forEach(rate => {
-                totalRate += rate.voterRate;
-            });
-            callbackRate = totalRate / rateQuery.length;
+        // grab form body 
+        const { firstname, lastname, username, password1, password2 } = req.body;
+        
+        // error catching 
+        let errors = [];
+        if (!firstname || !lastname || !username || !password1 || !password2) {
+            // determine that every field has been filled out 
+            errors.push({ msg: 'Please fill out all fields.' });
+        }
+        if (password1 !== password2) {
+            // determine matching passwords 
+            errors.push({ msg: 'Passwords do not match.' });
+        }
+        if (password1) {
+            // determine password strength
+            if (passwordStrength(password1).id === 0) {
+                errors.push({ msg: 'Password is too weak.' });
+            }
         }
 
-        // create a new queue object
-        const newQueue = new Queue({
-            boothCount: boothCount,
-            callbackRate: callbackRate,
-            callbackRange: callbackRange
-        });
-
-        // save the queue to the database
-        await newQueue.save()
-        .then(queue => {
-            console.log(queue);
-        })
-        .catch(err => {
-            console.log(err)
-        });
-
-        // Create a new admin object
-        const newAdmin = new Admin({
-            name: name,
-            password: password,
-            clearance: true
-        });
-
-        // Hash the entered password and save the admin 
-        bcrypt.genSalt(10, (err, salt) => { 
-            bcrypt.hash(newAdmin.password, salt, (err, hash) => {
-                if (err) {
-                    console.log(err);
-                }
-                // Set admin object's password to the newly hashed one
-                newAdmin.password = hash;
-                // Save the admin to the database
-                newAdmin.save()
-                .then(admin => {
-                    // Flash successful startup 
-                    req.flash(
-                        'success_msg', 
-                        'Master admin registered. You may now begin adding new Admins or Login in.'
-                    );
-                    // redirect admin to login page 
-                    res.redirect('/admin/login');
-                })
-                .catch(err => console.log(err));
+        if (errors.length > 0) {
+            // rerender page on form errors
+            res.render('startup', {
+                errors,
+                firstname,
+                lastname,
+                username,
+                password1,
+                password2
             });
-        });
+        } else {
+            // locate saved rates (e.g. from previous day)
+            const rateQuery = await Rate.find({})
+
+            // calculate callback rate
+            let newCallbackRate = 15;
+            if (rateQuery.length !== 0) {
+                // average saved rates
+                let totalRate = 0;
+                rateQuery.forEach(rate => { totalRate += rate.voterRate; });
+                newCallbackRate = totalRate / rateQuery.length;
+            } 
+
+            // create and save new queue (with calculated rate)
+            const newQueue = new Queue({ callbackRate: newCallbackRate });
+            newQueue.save();
+
+            // create new admin
+            let master = true;
+            const newAdmin = new Admin({
+                firstName: firstname,
+                lastName: lastname,
+                username: username,
+                password: password1,
+                clearance: master
+            });
+
+            // password encryption
+            bcrypt.genSalt(10, (err, salt) => { 
+                bcrypt.hash(newAdmin.password, salt, (err, hash) => {
+                    // set admin password to the encrypted one
+                    newAdmin.password = hash;
+
+                    // save the master admin
+                    newAdmin.save()
+                    .then(() => {
+                        // flash message successful save 
+                        req.flash(
+                            'success_msg', 
+                            'System has been started and master admin has been set. You may now begin adding new admins or you may login.'
+                        );
+                        res.redirect('/admin/login');
+                    });
+                });
+            });
+        }
     }
 });
 
 // Handle admin registration request  
 router.post('/register', async (req, res) => {
-    // Get request body 
-    const { name, password, password2, password3 } = req.body;
-    // initialize error list
-    let errors = [];
+    // locate admins (i.e. system started)
+    const adminQuery = await Admin.find({});
 
-    // Check all form fields have been filed  
-    if (!name || !password || !password2 || !password3) {
-        errors.push({ msg: 'All fields are required.' });
-    }
-    // Check that both passwords match 
-    if (password !== password2) {
-        errors.push({ msg: 'Passwords do not match.' });
-    }
-    // Check that the password is strong enough 
-    if (password) {
-        let passStrength = passwordStrength(password); 
-        if (passStrength.id === 0) {
-            errors.push({ msg: 'Password too weak.' });
-        }
-    }
-    // Check that the system has been started 
-    const masterAdmin = await Admin.findOne({ clearance: true });
-    if (!masterAdmin) {
-        errors.push({ msg: 'System Not Started.' });
-    } else {
-        // Check that the master password is correct
-        const masterPass = await bcrypt.compare(password3, masterAdmin.password);
-        if (!masterPass) {
-            errors.push({ msg: 'Master password is incorrect.' });
-        }
-    }
-    // Determine if any errors were encountered 
-    if (errors.length > 0) {
-        // Rerender the page and return error messages for flashing
-        res.render('register', {
-            errors,
-            name,
-            password,
-            password2,
-            password3
-        });
+    if (adminQuery.length === 0) {
+        // flash message and redirect on no system
+        req.flash(
+            'error_msg', 
+            'System has not been started.'
+        );
+        res.redirect('/admin/startup');
     }
     else {
-        // Validate that the admin name is not taken 
-        Admin.findOne({ name: name})
-            .then(admin => {
-                if (admin) {
-                    // If the admin exists push error message and rerender the registration page 
-                    errors.push({ msg: 'Name is already taken' });
-                    res.render('register', {
-                        errors,
-                        name,
-                        password,
-                        password2
-                    });
-                } else {
-                    // Create a new admin object
-                    const newAdmin = new Admin({
-                        name: name,
-                        password: password,
-                        clearance: false
-                    });
-                    // Hash the entered password
-                    bcrypt.genSalt(10, (err, salt) => { 
-                        bcrypt.hash(newAdmin.password, salt, (err, hash) => {
-                            if (err) throw err;
-                            // Set admin password to the newly hashed one
-                            newAdmin.password = hash;
-                            // Save the admin to the database
-                            newAdmin.save()
-                            .then(admin => {
-                                // On successful registration flash message
-                                req.flash(
-                                    'success_msg', 
-                                    'Admin Registered. You may now login'
-                                );
-                                // Redirect admin to the login page 
-                                res.redirect('/admin/login');
-                            })
-                            .catch(err => console.log(err));
-                        });
-                    });
-                }
+        // grab form body 
+        const { firstname, lastname, username, password1, password2, password3 } = req.body;
+        
+        // error catching 
+        let errors = [];
+        if (!firstname || !lastname || !username || !password1 || !password2 || !password3) {
+            // determine that every field has been filled out 
+            errors.push({ msg: 'Please fill out all fields.' });
+        }
+        if (password1 !== password2) {
+            // determine matching passwords 
+            errors.push({ msg: 'Passwords do not match.' });
+        }
+        if (password1) {
+            // determine password strength
+            if (passwordStrength(password1).id === 0) {
+                errors.push({ msg: 'Password is too weak.' });
+            }
+        }
+        let userTaken = false
+        adminQuery.forEach(admin => { 
+            if (username === admin.username) {
+                userTaken = true;
+            }
+        });
+        if (userTaken) {
+            // determine taken username
+            errors.push({ msg: 'Username is already taken.' });
+        }
+        const masterAdmin = await Admin.findOne({ clearance: true });
+        const masterPass = await bcrypt.compare(password3, masterAdmin.password);
+        if (!masterPass) {
+            // determine correct master password
+            errors.push({ msg: 'Master password is incorrect.' });
+        }
+
+        if (errors.length > 0) {
+            // rerender page on form errors
+            res.render('register', {
+                errors,
+                firstname,
+                lastname,
+                username,
+                password1,
+                password2,
+                password3
             });
+        } else {
+            // create new admin
+            let master = false;
+            const newAdmin = new Admin({
+                firstName: firstname,
+                lastName: lastname,
+                username: username,
+                password: password1,
+                clearance: master
+            });
+
+            // password encryption
+            bcrypt.genSalt(10, (err, salt) => { 
+                bcrypt.hash(newAdmin.password, salt, (err, hash) => {
+                    // set admin password to the encrypted one
+                    newAdmin.password = hash;
+
+                    // save the master admin
+                    newAdmin.save()
+                    .then(() => {
+                        // flash message successful save 
+                        req.flash(
+                            'success_msg', 
+                            'Admin registered. You may now login in.'
+                        );
+                        res.redirect('/admin/login');
+                    });
+                });
+            });
+        }
     }
 });
 
-// Handle admin login request 
-router.post('/login', (req, res, next) => {
-    passport.authenticate('local', {
-        successRedirect: '/dashboard',
-        failureRedirect: '/admin/login',
-        failureFlash: true
-    })(req, res, next);
+// admin login request 
+router.post('/login', async (req, res, next) => {
+    // locate admins (i.e. system started)
+    const adminQuery = await Admin.find({});
+
+    if (adminQuery.length === 0) {
+        // flash message and redirect on no system
+        req.flash(
+            'error_msg', 
+            'System has already been started.'
+        );
+        res.redirect('/admin/startup');
+    } else {
+        // authenticate admin
+        passport.authenticate('local', {
+            successRedirect: '/dashboard',
+            failureRedirect: '/admin/login',
+            failureFlash: true,
+            successFlash: {
+                type: 'success_msg',
+                message: 'Login successful. Welcome to VoterPass!'
+            }
+        })(req, res, next);
+    }
 });
 
-// Handle admin logout request
+// admin logout request
 router.get('/logout', (req, res) => {
     req.logout();
     req.flash('success_msg', 'Admin has been logged out');

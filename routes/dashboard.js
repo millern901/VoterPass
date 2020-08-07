@@ -5,14 +5,14 @@ const QRCode = require('qrcode');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
-// Mongoose model
+// mongoose schemas
 const Voter = require('../models/Voter');
 const Queue = require('../models/Queue')
 const Rate = require('../models/Rate');
 
-// URL Page Requests
+// dashboard webpage get requests
 router.get('/', (req, res) => {
-    res.render('../views/dashboard');
+    res.render('dashboard');
 });
 router.get('/checkin', (req, res) => {
     res.render('checkin');
@@ -27,84 +27,135 @@ router.get('/help', (req, res) => {
     res.render('help');
 });
 
-// functionality to add a voter to the queue
+// dashboard checkin request
 router.post('/checkin', async (req, res) => {
-    // grab all queues 
-    let queueQuery = await Queue.find({});
-
-    // get the current time and first queue in the database 
-    let currentTime = new Date();
+    // locate the queue and get the current time 
+    const queueQuery = await Queue.find({});
     let queue = queueQuery[0];
+    let currentTime = new Date();
 
-    // calculate when the callback time should be set to
-    let dif = Math.round(queue.callbackRate * (queue.queueOneLength / queue.boothCount));
-    let callbackStart = new Date(currentTime.getTime() + dif*60000);
-    let callbackEnd = new Date(callbackStart.getTime() + (queue.callbackRange)*60000);
+    // calculate the callback start and end times
+    let dif = Math.round(queue.callbackRate * queue.queueOneLength);
+    let callbackRange = 30;
+    let voterCallbackStart = new Date(currentTime.getTime() + dif*60000);
+    let voterCallbackEnd = new Date(voterCallbackStart.getTime() + callbackRange*60000);
 
-    // create a new voter object with the calculated callback time 
+    // create new voter (with calculated callback times)
     const newVoter = new Voter({
-        callbackStart: callbackStart,
-        callbackEnd: callbackEnd
+        callbackStart: voterCallbackStart,
+        callbackEnd: voterCallbackEnd
     });
 
-    // create a voter profile url with the voter's generated mongoDB id 
+    // create a voter qrcode using the url generated from it's mongodb id)
     voterURL = 'http://localhost:5000/dashboard/return/' + newVoter._id;        
+    const voterQRCode = await QRCode.toFile('./ticket/voter-qr-code.png', voterURL)
     
-    // Generate QR Code from the URL created before 
-    /*
-    let voterQRCode;
-    QRCode.toDataURL(voterURL, { type: 'terminal' })
-    .then(url => {
-        voterQRCode = url;
-    })
-    .catch(err => {
-        console.log(err);
-    });
-    */
-   const voterQRCode = await QRCode.toFile('./ticket/voter-qr-code.png', voterURL)
-    .catch(err => {
-        console.log(err);
-    });
+    // create a new voter ticket using the generated qrcode
+    const doc = new PDFDocument;
+    // pipe the ticket, add text to the ticket, and add the qrcode to the ticket
+    doc.pipe(fs.createWriteStream('./ticket/voter-ticket.pdf'));
+    doc.fontSize(12).text(`Callback Time Start:\n ${newVoter.callbackStart} \n\n Callback Time End:\n ${newVoter.callbackEnd}`, 100, 100);
+    doc.image('./ticket/voter-qr-code.png', { align: 'center', valign: 'center' });
+    // save the voting ticket 
+    doc.end();
 
     // increment the queue length
-    Queue.findByIdAndUpdate(queue._id, { queueOneLength: queue.queueOneLength + 1})
-    .then(doc => {
-        console.log('Queue 1 Length Incremented');
-    })
-    .catch(err => {
-        console.log(err);
-    });
-
+    await Queue.findByIdAndUpdate(
+        id = queue._id, 
+        { 
+            queueOneLength: queue.queueOneLength + 1 
+        }
+    );
+    
     // save the voter to mongoDB 
     newVoter.save()
-    .then(voter => {
+    .then(() => {
         req.flash(
             'success_msg', 
-            'Voter has been Added to the Queue.'
+            'Voter has been added to the queue.'
         );
         res.redirect('/dashboard/checkin');
-    })
-    .catch(err => { 
-        console.log(err);
     });
-
-    // create voting ticket pdf and route it to the tickets directory
-    const doc = new PDFDocument;
-    doc.pipe(fs.createWriteStream('./ticket/voter-ticket.pdf'));
-
-    // Embed a font, set the font size, and render some text
-    doc.fontSize(12)
-    .text(`Callback Time Start:\n ${newVoter.callbackStart} \n\n Callback Time End:\n ${newVoter.callbackEnd}`, 100, 100);
-
-
-    // Add an image, constrain it to a given size, and center it vertically and horizontally
-    doc.image('./ticket/voter-qr-code.png', {
-        align: 'center',
-        valign: 'center'
-    });
-
-    doc.end();
 });
+
+// dashboard return request
+router.post('/return/*', async (req, res) => {
+    // get the id from the http request
+    let requestURL = String(req.url);
+    const voterId = requestURL.substring(requestURL.lastIndexOf('/') + 1);
+
+    // locate the voter and initialize error list
+    const voterQuery = await Voter.find({ _id: voterId });
+
+    if (voterQuery.length === 0) {
+        // determine ticket validity
+        res.send("This Ticket is Invalid.");
+    }
+    else {
+        // locate the queue, set the voter, and get the current time
+        const queueQuery = await Queue.find({});
+        let queue = queueQuery[0];
+        let voter = voterQuery[0];
+        let currentTime = new Date();
+        
+        // voter has no return scan 
+        if (voter.qrScanOne === null) {
+            // get the time difference between now and the callbacktime
+            let callbackRange = 30;
+            let timeDifference = Math.round(currentTime.getTime() - (voter.callbackStart.getTime() / 60000));
+            // let timeDifferenceEnd = Math.round((voter.callbackEnd.getTime() / 60000) - currentTime.getTime());
+
+            if (0 < timeDifference && timeDifference < callbackRange) {
+                // determine if the callback has not started
+                res.send("You have missed your callback time.");
+            } else if (0 > timeDifference && -timeDifference < callbackRange) {
+                // determine if the callback has ended
+                res.send("Your callback time has not started.");
+            } else {
+                // update queue lengths
+                await Queue.findByIdAndUpdate(
+                    id = queue._id, 
+                    { 
+                        queueOneLength: queue.queueOneLength - 1, 
+                        queueTwoLength: queue.queueTwoLength + 1 
+                    }
+                );
+
+                // update voter scan one value 
+                Voter.findByIdAndUpdate(
+                    id = voter._id, 
+                    {
+                        qrScanOne: currentTime, 
+                        queueLength: ((queue.queueTwoLength === 0) ? 1 : queue.queueTwoLength)
+                    }
+                ).then(() => {
+                    // flash message successful return 
+                    res.send("Have have successfully returned.");
+                });
+            }
+        }
+        else {
+            // calculate voting rate for second scan
+            let timeDifference = (currentTime.getTime() - voter.qrScanOne.getTime()) / 60000;
+            let voterRate = timeDifference / voter.queueLength;
+            const newRate = new Rate({ votingRate: voterRate });
+
+            // save the calculated rate
+            await newRate.save();
+
+            // update the queue
+            await Queue.findByIdAndUpdate(id = queue._id, { queueTwoLength: queue.queueTwoLength - 1 });
+
+            // delete the voter 
+            Voter.findByIdAndRemove(id = voter._id)
+            .then(() => {
+                // flash message successful deletion 
+                res.send("You may now go and vote. Have a nice day.");
+            });
+        }
+    }
+});
+
 
 // functionality to update the queue
 router.post('/update', async (req, res) => {
@@ -187,108 +238,6 @@ router.post('/update', async (req, res) => {
                     );
                     res.redirect('/dashboard/checkin');
                 }
-            });
-        }
-    }
-});
-
-// functinoality to compute rates of returning voters
-router.post('/return/*', async (req, res) => {
-    // get the url request
-    requestURL = String(req.url);
-    const voterId = requestURL.substring(requestURL.lastIndexOf('/') + 1)
-
-    // search for a voter profile with the same id 
-    let returningVoter = await Voter.findById(voterId).exec();
-
-    // log if no voter exists
-    if (!returningVoter) {
-       console.log('This QR Code Does not exists.');
-    }
-    else {
-        // query for the currently active queue
-        let queueQuery = await Queue.find({});
-        let queue = queueQuery[0];
-
-        // get the current time 
-        let currentTime = new Date();
-        
-        // check that this is the voters first scan 
-        if (returningVoter.qrScanOne === null) {
-            // get the time difference between now and the callbacktime
-            let timeDifMin = Math.round((currentTime.getTime() - returningVoter.callbackStart.getTime()) / 60000);
-            //let errors = [];
-
-            // check that the difference is within the queue range 
-            if (timeDifMin > queue.callbackRange) {
-                console.log('You missed your callback time.');
-            } else if (timeDifMin < 0) {
-                console.log('Your callback time has not started.');
-            } 
-            // if the voter passes update the mongoDB entries  
-            else {
-                // determine if no one is in the second queue (edge case)
-                let secondQueueLength = queue.queueTwoLength;
-                if (secondQueueLength === 0) {
-                    secondQueueLength = 1;
-                } 
-
-                // update the voter currently selected 
-                Voter.findByIdAndUpdate(id=returningVoter._id, {qrScanOne: currentTime, queueLength: secondQueueLength})
-                .then(doc => {
-                   console.log('Have have successfully returned.');
-                })
-                .catch(err => {
-                    console.log(err);
-                });
-
-                // decrement the number of people currently in the main queue
-                Queue.findByIdAndUpdate(id=queue._id, { queueOneLength: queue.queueOneLength - 1, queueTwoLength: queue.queueTwoLength + 1 })
-                .then(voter => {
-                    console.log('Main Queue has been decremented.');
-                    console.log('Second Queue has been incremented.');
-                 })
-                .catch(err => {
-                    console.log(err);
-                });
-            }
-        }
-        // otherwise it is there second return
-        else {
-            // calculate and create voting rate
-            let timeDifMili = currentTime.getTime() - returningVoter.qrScanOne.getTime();
-            let timeDifMin = timeDifMili / 60000;
-            let rate = timeDifMin * (returningVoter.queueLength / queue.boothCount);
-            const newRate = new Rate({
-                voterRate: rate
-            });
-
-            // save the rate to the database 
-            newRate.save()
-            .then(rate => {
-                console.log('Rate has been saved');
-                console.log(rate);
-            })
-            .catch(err => {
-                console.log(err)
-            });
-
-            // delete the voter from the database 
-            Voter.findByIdAndRemove(id = returningVoter._id)
-            .then(doc => {
-                console.log('You may now go and vote.');
-            })
-            .catch(err => {
-                console.log(err)
-            });
-
-            // decrement the number of people currently in the main queue
-            Queue.findByIdAndUpdate(id=queue._id, { queueTwoLength: queue.queueTwoLength - 1 })
-            .then(doc => {
-                console.log('Second Queue has been decremented.');
-             })
-            .catch(err => {
-                console.log(err);
             });
         }
     }

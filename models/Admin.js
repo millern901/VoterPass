@@ -1,7 +1,19 @@
 const mongoose = require('mongoose');
 
 const AdminSchema = new mongoose.Schema({
-    name: {
+    firstName: {
+        type: String,
+        required: true
+    },
+    lastName: {
+        type: String,
+        required: true
+    },
+    username: {
+        type: String,
+        required: true
+    },
+    password: {
         type: String,
         required: true
     },
@@ -9,13 +21,9 @@ const AdminSchema = new mongoose.Schema({
         type: Boolean,
         required: true
     },
-    password: {
-        type: String,
-        required: true
-    },
-    date: {
+    dateCreated: {
         type: Date,
-        default: Date.now
+        default: Date.now()
     }
 });
 

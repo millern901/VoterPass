@@ -16,6 +16,10 @@ const VoterSchema = new mongoose.Schema({
     queueLength: {
         type: Number,
         default: 1
+    },
+    dateCreated: {
+        type: Date,
+        default: Date.now()
     }
 });
 

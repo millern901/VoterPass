@@ -21,6 +21,7 @@ const db = require('./config/keys').MongoURI;
 mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB Connected...'))
     .catch((err) => console.log(err));
+mongoose.set('useFindAndModify', false);
 
 // Configure application layout with EJS
 app.use(expressLayouts);

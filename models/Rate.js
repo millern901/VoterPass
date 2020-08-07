@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const RateSchema = new mongoose.Schema({
-    voterRate: {
+    votingRate: {
         type: Number,
         required: true
     }
