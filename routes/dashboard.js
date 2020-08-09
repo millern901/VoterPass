@@ -161,17 +161,15 @@ router.post('/return/*', async (req, res) => {
 // update admin profile request
 router.post('/update', async (req, res) => {
     // Get request body 
-    const { boothCount, callbackRange } = req.body;
+    const { callbackRange } = req.body;
     // initialize error list
     let errors = [];
 
     // Check all form fields have been filed  
-    if (!boothCount || !callbackRange) {
+    if (!callbackRange) {
         errors.push({ msg: 'All Fields are Required.' });
     }
-    if (boothCount <= 0) {
-        errors.push({ msg: 'You must have atleast one Active Booth.' });
-    }
+
 
     // Determine if any errors were encountered 
     if (errors.length > 0) {
@@ -239,6 +237,7 @@ router.post('/update', async (req, res) => {
                     );
                     res.redirect('/dashboard/checkin');
                 }
+                console.log("DONE")
             });
         }
     }

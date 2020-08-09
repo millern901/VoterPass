@@ -2,12 +2,12 @@
   <%- include('./partials/dashnav.ejs') %>
 
   <h1 class="text-center mb-3" style="margin-top: 15px;">
-    <i class="fa fa-wrench"></i> Queue Fixer
+    <i class="fa fa-wrench"></i> Queue Setting
   </h1>
 
   <div class="card text-white bg-secondary mb-3" style="width: 50%; margin-left: 25%; margin-bottom: 15px; background-color: rgb(255, 255, 255);">
     <div class="card-header">Update Form</div>
-    <div class="card-body">
+    <!--<div class="card-body">
       <%- include('./partials/messages.ejs') %>
       <form action="/dashboard/update" method="POST">
         <div class="form-group">
@@ -21,6 +21,7 @@
             value="<%= typeof boothCount != 'undefined' ? boothCount : '' %>"
           />
         </div>
+        -->
         <div class="form-group">
           <label for="callbackRange">Callback Range</label>
           <input
