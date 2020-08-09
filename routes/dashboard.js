@@ -7,8 +7,9 @@ const fs = require('fs');
 
 // mongoose schemas
 const Voter = require('../models/Voter');
-const Queue = require('../models/Queue')
+const Queue = require('../models/Queue');
 const Rate = require('../models/Rate');
+const Admin = require('../models/Admin');
 
 // dashboard webpage get requests
 router.get('/', (req, res) => {
@@ -48,14 +49,14 @@ router.post('/checkin', async (req, res) => {
 
     // create a voter qrcode using the url generated from it's mongodb id)
     voterURL = 'http://localhost:5000/dashboard/return/' + newVoter._id;        
-    const voterQRCode = await QRCode.toFile('./ticket/voter-qr-code.png', voterURL)
+    const voterQRCode = await QRCode.toFile('./voter-qr-code.png', voterURL)
     
     // create a new voter ticket using the generated qrcode
     const doc = new PDFDocument;
     // pipe the ticket, add text to the ticket, and add the qrcode to the ticket
-    doc.pipe(fs.createWriteStream('./ticket/voter-ticket.pdf'));
+    doc.pipe(fs.createWriteStream('./tickets/' + newVoter._id + '.pdf'));
     doc.fontSize(12).text(`Callback Time Start:\n ${newVoter.callbackStart} \n\n Callback Time End:\n ${newVoter.callbackEnd}`, 100, 100);
-    doc.image('./ticket/voter-qr-code.png', { align: 'center', valign: 'center' });
+    doc.image('./voter-qr-code.png', { align: 'center', valign: 'center' });
     // save the voting ticket 
     doc.end();
 
@@ -157,7 +158,7 @@ router.post('/return/*', async (req, res) => {
 });
 
 
-// functionality to update the queue
+// update admin profile request
 router.post('/update', async (req, res) => {
     // Get request body 
     const { boothCount, callbackRange } = req.body;
@@ -241,6 +242,16 @@ router.post('/update', async (req, res) => {
             });
         }
     }
+});
+
+// shutdown system request 
+router.get('/shutdown', async (req, res) => {
+    await Voter.deleteMany({});
+    await Queue.deleteMany({});
+    await Admin.remove({});
+    req.logout();
+    req.flash('success_msg', 'System has been shut down.');
+    res.redirect('/admin/startup');
 });
 
 module.exports = router;
