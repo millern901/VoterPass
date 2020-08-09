@@ -170,13 +170,11 @@ router.post('/update', async (req, res) => {
         errors.push({ msg: 'All Fields are Required.' });
     }
 
-
     // Determine if any errors were encountered 
     if (errors.length > 0) {
         // Rerender the page and return error messages for flashing
         res.render('update', {
-            errors,
-            boothCount
+            errors
         });
     } else {
         // calculate rate from all rates inside of the Rates collection
@@ -207,7 +205,6 @@ router.post('/update', async (req, res) => {
         if (queueQuery.length === 0) {
             // create a new voter object
             const newQueue = new Queue({
-                boothCount: boothCount,
                 callbackRate: newCallbackRate,
                 callbackRange: callbackRange
             });
@@ -227,7 +224,7 @@ router.post('/update', async (req, res) => {
         else {
             let queueId = queueQuery[0]._id;
             
-            Queue.findByIdAndUpdate(queueId, { boothCount: boothCount, callbackRate: newCallbackRate, callbackRange: callbackRange }, (err) => {
+            Queue.findByIdAndUpdate(queueId, { callbackRange: callbackRange }, (err) => {
                 if (err) {
                     console.log(err);
                 } else {
@@ -237,7 +234,6 @@ router.post('/update', async (req, res) => {
                     );
                     res.redirect('/dashboard/checkin');
                 }
-                console.log("DONE")
             });
         }
     }
