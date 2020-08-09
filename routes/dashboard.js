@@ -161,24 +161,20 @@ router.post('/return/*', async (req, res) => {
 // update admin profile request
 router.post('/update', async (req, res) => {
     // Get request body 
-    const { boothCount, callbackRange } = req.body;
+    const { callbackRange } = req.body;
     // initialize error list
     let errors = [];
 
     // Check all form fields have been filed  
-    if (!boothCount || !callbackRange) {
+    if (!callbackRange) {
         errors.push({ msg: 'All Fields are Required.' });
-    }
-    if (boothCount <= 0) {
-        errors.push({ msg: 'You must have atleast one Active Booth.' });
     }
 
     // Determine if any errors were encountered 
     if (errors.length > 0) {
         // Rerender the page and return error messages for flashing
         res.render('update', {
-            errors,
-            boothCount
+            errors
         });
     } else {
         // calculate rate from all rates inside of the Rates collection
@@ -209,7 +205,6 @@ router.post('/update', async (req, res) => {
         if (queueQuery.length === 0) {
             // create a new voter object
             const newQueue = new Queue({
-                boothCount: boothCount,
                 callbackRate: newCallbackRate,
                 callbackRange: callbackRange
             });
@@ -229,7 +224,7 @@ router.post('/update', async (req, res) => {
         else {
             let queueId = queueQuery[0]._id;
             
-            Queue.findByIdAndUpdate(queueId, { boothCount: boothCount, callbackRate: newCallbackRate, callbackRange: callbackRange }, (err) => {
+            Queue.findByIdAndUpdate(queueId, { callbackRange: callbackRange }, (err) => {
                 if (err) {
                     console.log(err);
                 } else {
