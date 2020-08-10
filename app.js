@@ -55,8 +55,8 @@ app.use((req, res, next) => {
 app.use('/', require('./routes/index.js'));
 app.use('/admin', require('./routes/admin.js'));
 
-// Use QR scanner module
-app.use('/modules', express.static('./modules/'));
+// static public folder
+app.use(express.static('public'));
 
 // Start application 
 const PORT = process.env.PORT || 5000;

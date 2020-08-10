@@ -1,0 +1,19 @@
+<div style="background-color:rgb(233, 233, 236); border-color: rgb(75, 72, 72); border-width: thin; border-style: solid;">
+  <%- include('./partials/dashnav.ejs') %>
+
+    <h1 class="text-center mb-3" style="margin-top: 15px;">
+      <i class="fa fa-home"> Voter Tickets</i> 
+    </h1>
+
+    <ul>
+      <% updatedTickets.forEach(ticket => { %>
+        <li>
+          <p>Callback Start Time: <%= ticket[2] %></p>
+          <p>Callback End Time: <%= ticket[3] %></p>
+          <a target="_blank" href="<%= ticket[1] %>"><%= ticket[0] %></a>
+        </li>
+      <% }) %>
+    </ul>
+
+  <%- include('./partials/footer.ejs') %>
+</div>

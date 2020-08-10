@@ -9,6 +9,7 @@ router.get('/', forwardAuthenticated, (req, res) => {
 });
 
 // set routing for dashboard links with authentication 
+// router.use('/dashboard', ensureAuthenticated, require('./dashboard.js'));
 router.use('/dashboard', ensureAuthenticated, require('./dashboard.js'));
 
 module.exports = router;

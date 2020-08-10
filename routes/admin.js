@@ -77,13 +77,13 @@ router.post('/startup', async (req, res) => {
             if (rateQuery.length !== 0) {
                 // average saved rates
                 let totalRate = 0;
-                rateQuery.forEach(rate => { totalRate += rate.voterRate; });
+                rateQuery.forEach(rate => { totalRate += rate.votingRate; });
                 newCallbackRate = totalRate / rateQuery.length;
             } 
 
             // create and save new queue (with calculated rate)
             const newQueue = new Queue({ callbackRate: newCallbackRate });
-            newQueue.save();
+            await newQueue.save();
 
             // create new admin
             let master = true;

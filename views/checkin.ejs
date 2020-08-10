@@ -2,11 +2,8 @@
   <%- include('./partials/dashnav.ejs') %>
 
   <h1 class="text-center mb-3" style="margin-top: 15px;">
-      <i class="fa fa-home fa-2x"></i> Voter Pass Queue
+      <i class="fa fa-home">Voter Pass Queue</i> 
   </h1>
-
-  <p class="lead">To add a voter to the queue, just press the button below to generate a ticket. 
-                  If a queue has not been set up, you will be redirected to a page where you may do just that!</p>
 
   <div class="text-center" style="width: 85%; margin-left: 7.25%;">
     <%- include('./partials/messages.ejs') %>
@@ -14,19 +11,38 @@
   
   <div style="margin-bottom: 25px; display: flex; justify-content: space-between;">
     <div style="flex-basis: 48%;">
-        <div class="card text-white bg-secondary mb-3" style="margin-left: 15px;">
-            <div class="card-header">Current Callback Time</div>
-            <div class="card-body">
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            </div>
-          </div>
+        <div class="card text-white bg-secondary mb-3" style="margin-left: 15px; max-height: 90%;">
+          <div class="card-header">
+            <h3 class="text-center">
+                Current Queue Status
+            </h3>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Current Time: <%= currentTime %>
+            <p></p>
+          </h5>
+          <h5 class="card-title">Next Callback Time: <%= nextCallbackTime %>
+            <p></p>
+          </h5>
+          <h5 class="card-title">Queue Length: <%= queueLength %>
+            <p></p>
+          </h5>
+        </div>
+      </div>
     </div>
     <div style="flex-basis: 48%;">
-        <div class="card text-white bg-secondary mb-3" style="margin-right: 15px;">
-          <div class="card-header">Generate Ticket</div>
+        <div class="card text-white bg-secondary mb-3" style="margin-right: 15px; max-height: 90%;">
+          <div class="card-header">
+            <h3 class="text-center">
+              Voting Ticket Creation
+            </h3>
+          </div>
           <div class="card-body">
+            <h5 class="card-title text-center">To add a voter to the queue, just press the button below to generate a ticket.
+              <p></p>
+            </h5>
             <form action="/dashboard/checkin/" method="POST">
-                <button type="submit" class="btn btn-primary btn-block">Add Voter</button>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Generate</button>
             </form> 
           </div>
         </div>

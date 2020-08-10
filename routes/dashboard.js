@@ -4,6 +4,8 @@ const router = express.Router();
 const QRCode = require('qrcode');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const path = require('path');
+const mongoose = require('mongoose');
 
 // mongoose schemas
 const Voter = require('../models/Voter');
@@ -12,18 +14,86 @@ const Rate = require('../models/Rate');
 const Admin = require('../models/Admin');
 
 // dashboard webpage get requests
-router.get('/', (req, res) => {
-    res.render('dashboard');
+router.get('/', async (req, res) => {
+    const queueQuery = await Queue.find({});
+    let queue = queueQuery[0];
+    let currentTime = new Date();
+    let queueLength = queue.queueOneLength;
+    let nextCallbackTime = new Date(currentTime.getTime() + Math.round(queue.callbackRate * queueLength)*60000);
+
+    currentTime = String(currentTime).split("GMT");
+    currentTime = currentTime[0];
+    nextCallbackTime = String(nextCallbackTime).split("GMT");
+    nextCallbackTime = nextCallbackTime[0];
+
+    res.render('dashboard', 
+        {
+            currentTime: currentTime, 
+            queueLength: queueLength, 
+            nextCallbackTime: nextCallbackTime, 
+            user: req.user
+        });
 });
-router.get('/checkin', (req, res) => {
-    res.render('checkin');
+router.get('/checkin', async (req, res) => {
+    const queueQuery = await Queue.find({});
+    let queue = queueQuery[0];
+    let currentTime = new Date();
+    let queueLength = queue.queueOneLength;
+    let nextCallbackTime = new Date(currentTime.getTime() + Math.round(queue.callbackRate * queueLength)*60000);
+
+    currentTime = String(currentTime).split("GMT");
+    currentTime = currentTime[0];
+    nextCallbackTime = String(nextCallbackTime).split("GMT");
+    nextCallbackTime = nextCallbackTime[0];
+
+    res.render('checkin', 
+        {
+            currentTime: currentTime, 
+            queueLength: queueLength, 
+            nextCallbackTime: nextCallbackTime
+        });
 });
 router.get('/return', (req, res) => {
     res.render('return');
 });
 router.get('/update', (req, res) => {
-    res.render('update');
+    res.render('update', 
+        {
+            user: req.user
+        });
 });
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+        await callback(array[index], index, array);
+    }
+}
+router.get('/ticket', async (req, res) => {
+    const dirPath = path.resolve('public/tickets');
+    const tickets = fs.readdirSync(dirPath).map(name => {
+        return {
+            name: path.basename(name, ".pdf"),
+            url: `/tickets/${name}`
+        };
+    });
+    const updatedTickets = [];
+    for (let i = 0; i < tickets.length; i++) {
+        let tempID = mongoose.Types.ObjectId(String(tickets[i].name));
+        const voter = await Voter.findById(id = tempID);
+        const tempTuple = [
+            tickets[i].name, 
+            tickets[i].url, 
+            voter.callbackStart, 
+            voter.callbackEnd
+        ];
+        updatedTickets.push(tempTuple);
+    }
+    console.log(updatedTickets.length);        
+    console.log(updatedTickets);
+
+    res.render('ticket', { updatedTickets });
+});
+
+
 router.get('/help', (req, res) => {
     res.render('help');
 });
@@ -49,31 +119,27 @@ router.post('/checkin', async (req, res) => {
 
     // create a voter qrcode using the url generated from it's mongodb id)
     voterURL = 'http://localhost:5000/dashboard/return/' + newVoter._id;        
-    const voterQRCode = await QRCode.toFile('./voter-qr-code.png', voterURL)
+    const voterQRCode = await QRCode.toFile('./public/voter-qr-code.png', voterURL)
+    let filepath = './public/tickets/' + newVoter._id + '.pdf';
     
     // create a new voter ticket using the generated qrcode
     const doc = new PDFDocument;
     // pipe the ticket, add text to the ticket, and add the qrcode to the ticket
-    doc.pipe(fs.createWriteStream('./tickets/' + newVoter._id + '.pdf'));
+    doc.pipe(fs.createWriteStream(filepath));
     doc.fontSize(12).text(`Callback Time Start:\n ${newVoter.callbackStart} \n\n Callback Time End:\n ${newVoter.callbackEnd}`, 100, 100);
-    doc.image('./voter-qr-code.png', { align: 'center', valign: 'center' });
+    doc.image('./public/voter-qr-code.png', { align: 'center', valign: 'center' });
     // save the voting ticket 
     doc.end();
 
     // increment the queue length
-    await Queue.findByIdAndUpdate(
-        id = queue._id, 
-        { 
-            queueOneLength: queue.queueOneLength + 1 
-        }
-    );
+    await Queue.findByIdAndUpdate(id = queue._id, { queueOneLength: queue.queueOneLength + 1 });
     
     // save the voter to mongoDB 
     newVoter.save()
     .then(() => {
         req.flash(
-            'success_msg', 
-            'Voter has been added to the queue.'
+           'success_msg', 
+           'Voter has been added to the queue.'
         );
         res.redirect('/dashboard/checkin');
     });
@@ -157,90 +223,83 @@ router.post('/return/*', async (req, res) => {
     }
 });
 
-
 // update admin profile request
 router.post('/update', async (req, res) => {
-    // Get request body 
-    const { boothCount, callbackRange } = req.body;
-    // initialize error list
+    // grab form body 
+    const { firstName, lastName, username, password1, password2 } = req.body;
+    
+    // error catching 
     let errors = [];
-
-    // Check all form fields have been filed  
-    if (!boothCount || !callbackRange) {
-        errors.push({ msg: 'All Fields are Required.' });
+    if (password1) {
+        if (password1 !== password2) {
+            // determine matching passwords 
+            errors.push({ msg: 'Passwords do not match.' });
+        }
     }
-    if (boothCount <= 0) {
-        errors.push({ msg: 'You must have atleast one Active Booth.' });
+    
+    if (password1) {
+        // determine password strength
+        if (passwordStrength(password1).id === 0) {
+            errors.push({ msg: 'Password is too weak.' });
+        }
+    }
+    let userTaken = false
+    adminQuery.forEach(admin => { 
+        if (username === admin.username) {
+            userTaken = true;
+        }
+    });
+    if (userTaken) {
+        // determine taken username
+        errors.push({ msg: 'Username is already taken.' });
+    }
+    const masterAdmin = await Admin.findOne({ clearance: true });
+    const masterPass = await bcrypt.compare(password3, masterAdmin.password);
+    if (!masterPass) {
+        // determine correct master password
+        errors.push({ msg: 'Master password is incorrect.' });
     }
 
-    // Determine if any errors were encountered 
     if (errors.length > 0) {
-        // Rerender the page and return error messages for flashing
-        res.render('update', {
+        // rerender page on form errors
+        res.render('register', {
             errors,
-            boothCount
+            firstname,
+            lastname,
+            username,
+            password1,
+            password2,
+            password3
         });
     } else {
-        // calculate rate from all rates inside of the Rates collection
-        let rateQuery = await Rate.find({}, (err) => {
-            if (err) {
-                console.log(err);
-            }
-        });
-        let newCallbackRate = 1;
-
-        // if we have some rates average them 
-        if (rateQuery.length !== 0) {
-            let totalRate = 0;
-            rateQuery.forEach(rate => {
-                totalRate += rate.voterRate;
-            });
-            newCallbackRate = totalRate / rateQuery.length;
-        }
-
-        // query for active queue
-        let queueQuery = await Queue.find({}, (err) => {
-            if (err) {
-                console.log(err);
-            }
+        // create new admin
+        let master = false;
+        const newAdmin = new Admin({
+            firstName: firstname,
+            lastName: lastname,
+            username: username,
+            password: password1,
+            clearance: master
         });
 
-        // queue is not set up
-        if (queueQuery.length === 0) {
-            // create a new voter object
-            const newQueue = new Queue({
-                boothCount: boothCount,
-                callbackRate: newCallbackRate,
-                callbackRange: callbackRange
-            });
+        // password encryption
+        bcrypt.genSalt(10, (err, salt) => { 
+            bcrypt.hash(newAdmin.password, salt, (err, hash) => {
+                // set admin password to the encrypted one
+                newAdmin.password = hash;
 
-            newQueue.save()
-            .then(queue => {
-                req.flash(
-                    'success_msg', 
-                    'Queue successfully created. You may now begin adding Voters to it.'
-                );
-                console.log(queue);
-                res.redirect('/dashboard/checkin');
-            })
-            .catch(err => console.log(err));
-        }
-        // updating an active queue
-        else {
-            let queueId = queueQuery[0]._id;
-            
-            Queue.findByIdAndUpdate(queueId, { boothCount: boothCount, callbackRate: newCallbackRate, callbackRange: callbackRange }, (err) => {
-                if (err) {
-                    console.log(err);
-                } else {
+                // save the master admin
+                newAdmin.save()
+                .then(() => {
+                    // flash message successful save 
                     req.flash(
                         'success_msg', 
-                        'Queue successfully updated. You may continue adding Voters to it.'
+                        'Admin registered. You may now login in.'
                     );
-                    res.redirect('/dashboard/checkin');
-                }
+                    res.redirect('/admin/login');
+                });
             });
-        }
+        });
     }
 });
 
@@ -248,7 +307,7 @@ router.post('/update', async (req, res) => {
 router.get('/shutdown', async (req, res) => {
     await Voter.deleteMany({});
     await Queue.deleteMany({});
-    await Admin.remove({});
+    // await Admin.remove({});
     req.logout();
     req.flash('success_msg', 'System has been shut down.');
     res.redirect('/admin/startup');
