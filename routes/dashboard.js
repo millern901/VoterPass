@@ -69,6 +69,7 @@ router.get('/update', (req, res) => {
         });
 });
 router.get('/ticket', async (req, res) => {
+    let currentTime = new Date();
     const dirPath = path.resolve('public/tickets');
     const tickets = fs.readdirSync(dirPath).map(name => {
         return {
@@ -81,13 +82,17 @@ router.get('/ticket', async (req, res) => {
         let tempID = mongoose.Types.ObjectId(String(tickets[i].name));
         const voter = await Voter.findById(id = tempID);
         if (voter) {
-            const tempTuple = [
-                tickets[i].name, 
-                tickets[i].url, 
-                voter.callbackStart, 
-                voter.callbackEnd
-            ];
-            tempTickets.push(tempTuple);
+            if (voter.callbackEnd.getTime() < currentTime.getTime()) {
+                await Voter.findByIdAndRemove(id = voter._id);
+            } else {
+                const tempTuple = [
+                    tickets[i].name, 
+                    tickets[i].url, 
+                    voter.callbackStart, 
+                    voter.callbackEnd
+                ];
+                tempTickets.push(tempTuple);
+            }
         } else {
             continue;
         }
@@ -181,6 +186,7 @@ router.post('/return/*', async (req, res) => {
 
             if (0 < timeDifference && timeDifference < callbackRange) {
                 // determine if the callback has not started
+                await Voter.findByIdAndRemove(id = voter._id);
                 res.send("You have missed your callback time.");
             } else if (0 > timeDifference && -timeDifference < callbackRange) {
                 // determine if the callback has ended
@@ -318,7 +324,7 @@ router.post('/update', async (req, res) => {
     }
 });
 
-
+// check that a file exists 
 function fileExists(path) {
     try  {
         return fs.statSync(path).isFile();
@@ -329,7 +335,6 @@ function fileExists(path) {
       }
     }
 }
-
 // dashboard shutdown request 
 router.get('/shutdown', async (req, res) => {
     // delete all tickets 
