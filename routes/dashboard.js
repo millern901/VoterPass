@@ -52,11 +52,15 @@ router.get('/checkin', async (req, res) => {
         {
             currentTime: currentTime, 
             queueLength: queueLength, 
-            nextCallbackTime: nextCallbackTime
+            nextCallbackTime: nextCallbackTime,
+            user: req.user
         });
 });
 router.get('/return', (req, res) => {
-    res.render('return');
+    res.render('return', 
+    {
+        user: req.user
+    });
 });
 router.get('/update', (req, res) => {
     res.render('update', 
@@ -65,6 +69,7 @@ router.get('/update', (req, res) => {
         });
 });
 router.get('/ticket', async (req, res) => {
+    let currentTime = new Date();
     const dirPath = path.resolve('public/tickets');
     const tickets = fs.readdirSync(dirPath).map(name => {
         return {
@@ -72,25 +77,37 @@ router.get('/ticket', async (req, res) => {
             url: `/tickets/${name}`
         };
     });
-    const updatedTickets = [];
+    const tempTickets = [];
     for (let i = 0; i < tickets.length; i++) {
         let tempID = mongoose.Types.ObjectId(String(tickets[i].name));
         const voter = await Voter.findById(id = tempID);
-        const tempTuple = [
-            tickets[i].name, 
-            tickets[i].url, 
-            voter.callbackStart, 
-            voter.callbackEnd
-        ];
-        updatedTickets.push(tempTuple);
+        if (voter) {
+            if (voter.callbackEnd.getTime() < currentTime.getTime()) {
+                await Voter.findByIdAndRemove(id = voter._id);
+            } else {
+                const tempTuple = [
+                    tickets[i].name, 
+                    tickets[i].url, 
+                    voter.callbackStart, 
+                    voter.callbackEnd
+                ];
+                tempTickets.push(tempTuple);
+            }
+        } else {
+            continue;
+        }
     }
-    console.log(updatedTickets.length);        
-    console.log(updatedTickets);
-
-    res.render('ticket', { updatedTickets });
+    const updatedTickets = tempTickets.sort((a, b) => {
+        return b[2].getTime() - a[2].getTime();
+    });
+    
+    res.render('ticket', { updatedTickets, user: req.user });
 });
 router.get('/help', (req, res) => {
-    res.render('help');
+    res.render('help', 
+    {
+        user: req.user
+    });
 });
 
 // dashboard checkin request
@@ -152,8 +169,7 @@ router.post('/return/*', async (req, res) => {
     if (voterQuery.length === 0) {
         // determine ticket validity
         res.send("This Ticket is Invalid.");
-    }
-    else {
+    } else {
         // locate the queue, set the voter, and get the current time
         const queueQuery = await Queue.find({});
         let queue = queueQuery[0];
@@ -169,6 +185,7 @@ router.post('/return/*', async (req, res) => {
 
             if (0 < timeDifference && timeDifference < callbackRange) {
                 // determine if the callback has not started
+                await Voter.findByIdAndRemove(id = voter._id);
                 res.send("You have missed your callback time.");
             } else if (0 > timeDifference && -timeDifference < callbackRange) {
                 // determine if the callback has ended
@@ -218,11 +235,12 @@ router.post('/return/*', async (req, res) => {
     }
 });
 
-// update admin profile request
+// dashboard update request
 router.post('/update', async (req, res) => {
     // set update object 
     let objForUpdate = {};
     let errors = []
+    let tempPassword = ''
 
     // error catching
     if (req.body.firstName) {
@@ -236,15 +254,8 @@ router.post('/update', async (req, res) => {
             if (req.body.password1 === req.body.password2) {
                 if (passwordStrength(req.body.password1).id === 0) {
                     errors.push({ msg: 'Password is too weak.' });
-                }
-                else {
-                    // password encryption
-                    bcrypt.genSalt(10, (err, salt) => { 
-                        bcrypt.hash(req.body.password1, salt, (err, hash) => {
-                            // set admin password to the encrypted one
-                            objForUpdate.password = hash;
-                        });
-                    });
+                } else {
+                    tempPassword = req.body.password1;
                 }
             }
             else {
@@ -274,29 +285,80 @@ router.post('/update', async (req, res) => {
             lastName,
             username,
             password1,
-            password2
+            password2,
+            user: req.user
         });
     } else {
         // update admin
-        objForUpdate = { $set: objForUpdate };
-        Admin.findByIdAndUpdate(_id = req.user._id, objForUpdate)
-        .then(() => {
-            // flash message successful save 
-            req.flash(
-                'success_msg', 
-                'Profile updated.'
-            );
-            res.redirect('/dashboard/update');
-        });
+        //objForUpdate = { $set: objForUpdate };
+        const adminQuery = await Admin.findById(_id = req.user._id);
+
+        if (objForUpdate.firstName) {
+            adminQuery.firstName = objForUpdate.firstName;
+        }
+        if (objForUpdate.lastName) {
+            adminQuery.lastName = objForUpdate.lastName;
+        }
+        if (objForUpdate.username) {
+            adminQuery.username = objForUpdate.username;
+        }
+        if (tempPassword !== '') {
+            bcrypt.genSalt(10, (err, salt) => { 
+                bcrypt.hash(tempPassword, salt, (err, hash) => {
+                    // set admin password to the encrypted one
+                    adminQuery.password = hash;
+                    // save the master admin
+                    adminQuery.save()
+                    .then(() => {
+                        // flash message successful save 
+                        req.flash(
+                            'success_msg', 
+                            'Profile updated.'
+                        );
+                        res.redirect('/dashboard/update');
+                    });
+                });
+            });
+        }
     }
 });
 
-
-// shutdown system request 
+// check that a file exists 
+function fileExists(path) {
+    try  {
+        return fs.statSync(path).isFile();
+    }
+    catch (e) {
+      if (e.code == 'ENOENT') { // no such file or directory. File really does not exist
+        return false;
+      }
+    }
+}
+// dashboard shutdown request 
 router.get('/shutdown', async (req, res) => {
+    // delete all tickets 
+    const dirPath = path.resolve('public/tickets');
+    fs.readdir(dirPath, (err, files) => {
+        if (files.length !== 0) {
+            for (const file of files) {
+                fs.unlinkSync(path.join(dirPath, file));
+            }
+        }
+    });
+
+    // remove temporary png 
+    const dirPath2 = path.resolve('public');
+    let pngPath = path.join(dirPath2, 'voter-qr-code.png');
+    if (fileExists(pngPath)) {
+        fs.unlinkSync(pngPath);
+    }
+
+    // clear all collections (except for rates)
     await Voter.deleteMany({});
     await Queue.deleteMany({});
-    // await Admin.remove({});
+    await Admin.remove({});
+
+    // logout and flash 
     req.logout();
     req.flash('success_msg', 'System has been shut down.');
     res.redirect('/admin/startup');

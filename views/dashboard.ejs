@@ -1,8 +1,12 @@
+<audio autoplay>
+  <source src="sound.mp3" type="audio/mpeg">
+</audio>
+
 <div style="background-color:rgb(233, 233, 236); border-color: rgb(75, 72, 72); border-width: thin; border-style: solid;">
     <%- include('./partials/dashnav.ejs') %>
-
+    
     <h1 class="text-center mb-3" style="margin-top: 15px;">
-        <i class="fa fa-home fa-1x">Welcome to VoterPass, <%= user.firstName %> </i> 
+        <i class="fa fa-home"> Welcome to VoterPass, <%= user.firstName %> </i> 
     </h1>
 
     <div class="text-center" style="width: 85%; margin-left: 7.25%;">
@@ -11,7 +15,7 @@
     
     <div style="margin-bottom: 25px; display: flex; justify-content: space-between;">
         <div style="flex-basis: 48%;">
-            <div class="card text-white bg-secondary mb-3" style="margin-left: 15px;">
+            <div class="card text-white bg-secondary mb-3" style="margin-left: 15px; height: 90%;">
                 <div class="card-header">
                     <h3 class="text-center">
                         Queue Status
@@ -31,7 +35,7 @@
             </div>
         </div>
         <div style="flex-basis: 48%;">
-            <div class="card text-white bg-secondary mb-3" style="margin-right: 15px;">
+            <div class="card text-white bg-secondary mb-3" style="margin-right: 15px; height: 90%;">
                 <div class="card-header">
                     <h3 class="text-center">
                         Header Description
