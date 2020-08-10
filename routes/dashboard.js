@@ -209,7 +209,7 @@ router.post('/return/*', async (req, res) => {
                     }
                 ).then(() => {
                     // flash message successful return 
-                    res.send("Have have successfully returned.");
+                    res.send("You have successfully returned.");
                 });
             }
         }
@@ -229,7 +229,7 @@ router.post('/return/*', async (req, res) => {
             Voter.findByIdAndRemove(id = voter._id)
             .then(() => {
                 // flash message successful deletion 
-                res.send("You may now go and vote. Have a nice day.");
+                res.send("You may now go and vote. Have a nice day. That's Cap!");
             });
         }
     }
