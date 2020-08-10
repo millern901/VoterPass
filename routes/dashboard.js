@@ -6,6 +6,8 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
+const passwordStrength = require('check-password-strength');
+const bcrypt = require('bcryptjs');
 
 // mongoose schemas
 const Voter = require('../models/Voter');
@@ -62,7 +64,6 @@ router.get('/update', (req, res) => {
             user: req.user
         });
 });
-
 router.get('/ticket', async (req, res) => {
     const dirPath = path.resolve('public/tickets');
     const tickets = fs.readdirSync(dirPath).map(name => {
@@ -88,8 +89,6 @@ router.get('/ticket', async (req, res) => {
 
     res.render('ticket', { updatedTickets });
 });
-
-
 router.get('/help', (req, res) => {
     res.render('help');
 });
@@ -221,83 +220,77 @@ router.post('/return/*', async (req, res) => {
 
 // update admin profile request
 router.post('/update', async (req, res) => {
-    // grab form body 
-    const { firstName, lastName, username, password1, password2 } = req.body;
-    
-    // error catching 
-    let errors = [];
-    if (password1) {
-        if (password1 !== password2) {
-            // determine matching passwords 
-            errors.push({ msg: 'Passwords do not match.' });
+    // set update object 
+    let objForUpdate = {};
+    let errors = []
+
+    // error catching
+    if (req.body.firstName) {
+        objForUpdate.firstName = req.body.firstName;
+    }
+    if (req.body.lastName) {
+        objForUpdate.lastName = req.body.lastName;
+    }
+    if (req.body.password1 || req.body.password2) {
+        if (req.body.password1 && req.body.password2) {
+            if (req.body.password1 === req.body.password2) {
+                if (passwordStrength(req.body.password1).id === 0) {
+                    errors.push({ msg: 'Password is too weak.' });
+                }
+                else {
+                    // password encryption
+                    bcrypt.genSalt(10, (err, salt) => { 
+                        bcrypt.hash(req.body.password1, salt, (err, hash) => {
+                            // set admin password to the encrypted one
+                            objForUpdate.password = hash;
+                        });
+                    });
+                }
+            }
+            else {
+                errors.push({ msg: 'Passwords do not match.' });
+            }
+        } else {
+            errors.push({ msg: 'Both passwords must be filled in.' });
         }
     }
-    
-    if (password1) {
-        // determine password strength
-        if (passwordStrength(password1).id === 0) {
-            errors.push({ msg: 'Password is too weak.' });
+    if (req.body.username) {
+        const usernameQuery = await Admin.find({ username: req.body.username });
+        if (usernameQuery.length === 0) {
+            objForUpdate.username = req.body.username;
+        } else {
+            errors.push({ msg: 'Username is taken.' });
         }
     }
-    let userTaken = false
-    adminQuery.forEach(admin => { 
-        if (username === admin.username) {
-            userTaken = true;
-        }
-    });
-    if (userTaken) {
-        // determine taken username
-        errors.push({ msg: 'Username is already taken.' });
-    }
-    const masterAdmin = await Admin.findOne({ clearance: true });
-    const masterPass = await bcrypt.compare(password3, masterAdmin.password);
-    if (!masterPass) {
-        // determine correct master password
-        errors.push({ msg: 'Master password is incorrect.' });
+    if (objForUpdate.length === 0)  {
+        errors.push({ msg: 'Nothing was submitted.' });
     }
 
     if (errors.length > 0) {
-        // rerender page on form errors
-        res.render('register', {
+        const { firstName, lastName, username, password1, password2 } = req.body;
+        res.render('update', {
             errors,
-            firstname,
-            lastname,
+            firstName,
+            lastName,
             username,
             password1,
-            password2,
-            password3
+            password2
         });
     } else {
-        // create new admin
-        let master = false;
-        const newAdmin = new Admin({
-            firstName: firstname,
-            lastName: lastname,
-            username: username,
-            password: password1,
-            clearance: master
-        });
-
-        // password encryption
-        bcrypt.genSalt(10, (err, salt) => { 
-            bcrypt.hash(newAdmin.password, salt, (err, hash) => {
-                // set admin password to the encrypted one
-                newAdmin.password = hash;
-
-                // save the master admin
-                newAdmin.save()
-                .then(() => {
-                    // flash message successful save 
-                    req.flash(
-                        'success_msg', 
-                        'Admin registered. You may now login in.'
-                    );
-                    res.redirect('/admin/login');
-                });
-            });
+        // update admin
+        objForUpdate = { $set: objForUpdate };
+        Admin.findByIdAndUpdate(_id = req.user._id, objForUpdate)
+        .then(() => {
+            // flash message successful save 
+            req.flash(
+                'success_msg', 
+                'Profile updated.'
+            );
+            res.redirect('/dashboard/update');
         });
     }
 });
+
 
 // shutdown system request 
 router.get('/shutdown', async (req, res) => {
