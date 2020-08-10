@@ -4,16 +4,24 @@
     <h1 class="text-center mb-3" style="margin-top: 15px;">
       <i class="fa fa-envelope"> Voter Tickets</i> 
     </h1>
-
-    <ul>
+    <div style="max-height: 652px; overflow-x: auto; -webkit-overflow-scrolling: smooth;">
       <% updatedTickets.forEach(ticket => { %>
-        <li>
-          <p>Callback Start Time: <%= ticket[2] %></p>
-          <p>Callback End Time: <%= ticket[3] %></p>
-          <a target="_blank" href="<%= ticket[1] %>"><%= ticket[0] %></a>
-        </li>
+          <div class="card text-white bg-primary mb-3" style="width: 50%; margin-left: 25%; margin-bottom: 15px; background-color: rgb(255, 255, 255);">
+            <div class="card-header">Voter Ticket</div>
+            <div class="card-body">
+              <h5 class="card-title">Callback Start Time: <%= ticket[2] %>
+                <p></p>
+              </h5>
+              <h5 class="card-title">Callback End Time: <%= ticket[3] %>
+                <p></p>
+              </h5>
+              <h5 class="card-title">
+                <a target="_blank" href="<%= ticket[1] %>"><%= ticket[0] %></a>
+              </h5>
+            </div>
+          </div>
       <% }) %>
-    </ul>
+    </div>
 
   <%- include('./partials/footer.ejs') %>
 </div>
