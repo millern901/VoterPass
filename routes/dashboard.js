@@ -62,11 +62,7 @@ router.get('/update', (req, res) => {
             user: req.user
         });
 });
-async function asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-        await callback(array[index], index, array);
-    }
-}
+
 router.get('/ticket', async (req, res) => {
     const dirPath = path.resolve('public/tickets');
     const tickets = fs.readdirSync(dirPath).map(name => {
