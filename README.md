@@ -1,5 +1,5 @@
 # VoterPass
-Welcome to VoterPass! This website is designed to create a virtual queue for voters on election day. An administrator can sign into the website to run the line. Voters can then check in and receive a callback time to return at and a ticket with a QR code. Once it is the callback time, the voter can return to the voting venue where the administrator will scan the voter's QR code ticket. The voter will then proceed to vote.
+Welcome to VoterPass! This website is designed to create a virtual queue for voters on election day. An administrator can sign into the website to run the line. Voters can then check in and receive a callback time to return at and a ticket with a QR code. Once it is the callback time, the voter can return to the voting venue where the administrator will scan the voter's QR code ticket. The voter will then proceed to vote. 
 
 ## Motivation
 VoterPass was created in order improve the voting experience and keep people safe. During election day, lines can be long and crowded, which is especially problematic during the COVID-19 crisis. By creating a virtual queue, people can move around and stand where they want. This helps maintain social distancing and overall gives a better voting experience.
@@ -22,3 +22,4 @@ Use "npm install" to install proper dependencies.
 
 ## Credits
 Created by Grace Wilcox, Varun Puri, Kyle Sousa, and Nicholas Miller
+
