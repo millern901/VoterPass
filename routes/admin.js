@@ -220,7 +220,7 @@ router.post('/login', async (req, res, next) => {
         // flash message and redirect on no system
         req.flash(
             'error_msg', 
-            'System has already been started.'
+            'System has not been started.'
         );
         res.redirect('/admin/startup');
     } else {
