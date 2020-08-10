@@ -273,9 +273,6 @@ router.post('/update', async (req, res) => {
             errors.push({ msg: 'Username is taken.' });
         }
     }
-    if (objForUpdate.length === 0)  {
-        errors.push({ msg: 'Nothing was submitted.' });
-    }
 
     if (errors.length > 0) {
         const { firstName, lastName, username, password1, password2 } = req.body;
@@ -290,7 +287,6 @@ router.post('/update', async (req, res) => {
         });
     } else {
         // update admin
-        //objForUpdate = { $set: objForUpdate };
         const adminQuery = await Admin.findById(_id = req.user._id);
 
         if (objForUpdate.firstName) {
@@ -310,14 +306,23 @@ router.post('/update', async (req, res) => {
                     // save the master admin
                     adminQuery.save()
                     .then(() => {
-                        // flash message successful save 
                         req.flash(
                             'success_msg', 
                             'Profile updated.'
                         );
                         res.redirect('/dashboard/update');
                     });
+
                 });
+            });
+        } else {
+            adminQuery.save()
+            .then(() => {
+                req.flash(
+                    'success_msg', 
+                    'Profile updated.'
+                );
+                res.redirect('/dashboard/update');
             });
         }
     }
