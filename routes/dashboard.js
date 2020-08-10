@@ -169,8 +169,7 @@ router.post('/return/*', async (req, res) => {
     if (voterQuery.length === 0) {
         // determine ticket validity
         res.send("This Ticket is Invalid.");
-    }
-    else {
+    } else {
         // locate the queue, set the voter, and get the current time
         const queueQuery = await Queue.find({});
         let queue = queueQuery[0];
