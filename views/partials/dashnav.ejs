@@ -20,8 +20,16 @@
             <a class="nav-link" href="/dashboard/help">Help</a>
         </li>
       </ul>
-      <div class=" my-2 my-lg-0">
-        <a href="/dashboard/shutdown" class="btn btn-danger btn-block"> Shutdown </a>
-        <a href="/admin/logout" class="btn btn-danger btn-block"> Logout </a>
+
+      <div style="display: flex; justify-content: space-between;">
+        <div style="flex-basis: 40%; float: left; margin-right: 5px;">
+          <% if (user.clearance == 1) {%>
+            <a href="/dashboard/shutdown" class="btn btn-danger btn-block"> Shutdown </a>
+          <% } %>
+        </div>
+        <div style="flex-basis: 40%; float: right;">
+          <a href="/admin/logout" class="btn btn-danger btn-block"> Logout </a>
+        </div>
+      </div>
     </div>
 </nav>
