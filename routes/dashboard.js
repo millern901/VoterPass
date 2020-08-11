@@ -229,7 +229,7 @@ router.post('/return/*', async (req, res) => {
             Voter.findByIdAndRemove(id = voter._id)
             .then(() => {
                 // flash message successful deletion 
-                res.send("You may now go and vote. Have a nice day. That's Cap!");
+                res.send("You may now go and vote. Have a nice day.");
             });
         }
     }
