@@ -3,7 +3,7 @@ module.exports = {
         if (req.isAuthenticated()) {
             return next();
         }
-        req.flash('error_msg', 'Page requires admin privilages');
+        req.flash('error_msg', 'Page requires admin privileges');
         res.redirect('/admin/login');
     },
     forwardAuthenticated: (req, res, next) => {
