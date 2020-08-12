@@ -18,8 +18,12 @@ The first big feature is the ability to add voters to the virtual queue. By just
 When the voter returns at their specified time, the ticket is scanned on the return page to confirm the voter is back at the right time. The voter can then proceed to vote.
 
 ## Installation
-Use "npm install" to install proper dependencies. 
+Use "npm install -i" to install proper dependencies. 
+
+## Installation
+Run in development mode: "npm run dev".
+Run in release mode: "npm run start".
 
 ## Credits
-Created by Grace Wilcox, Varun Puri, Kyle Sousa, and Nicholas Miller
+Created by Nicholas Miller, Grace Wilcox, Varun Puri, and Kyle Sousa
 
