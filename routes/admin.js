@@ -13,14 +13,21 @@ const Queue = require('../models/Queue')
 const Rate = require('../models/Rate');
 const Admin = require('../models/Admin');
 
-// admin webpage get requests
+// startup webpage get request
 router.get('/startup', forwardAuthenticated, (req, res) => {
+    // render startup page 
     res.render('startup');
 });
+
+// login webpage get request
 router.get('/login', forwardAuthenticated, (req, res) => {
+    // render login page 
     res.render('login');
 });
+
+// register webpage get request
 router.get('/register', forwardAuthenticated, (req, res) => {
+    // render register page 
     res.render('register');
 });
 

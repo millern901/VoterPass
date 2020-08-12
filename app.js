@@ -1,49 +1,44 @@
-// Routing dependencies 
+// dependencies 
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts');
-// Database dependency
 const mongoose = require('mongoose');
-// Messages dependency
 const flash = require('connect-flash');
-// Session/authentication dependencies
 const session = require('express-session');
 const passport = require('passport');
 
-// Initialize express application 
+// initialize express application 
 const app = express();
 
-// Configure passport login
+// configure passport login
 require('./config/passport')(passport);
 
-// Establish database connection 
+// establish mongodb connection and set preferences 
 const db = require('./config/keys').MongoURI;
-mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB Connected...'))
-    .catch((err) => console.log(err));
+mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => console.log('MongoDB Connected...'));
 mongoose.set('useFindAndModify', false);
 
-// Configure application layout with EJS
+// configure view engine and styling
 app.use(expressLayouts);
 app.set('view engine', 'ejs');
 
-// Setup url bodyparser
+// set url bodyparser
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize application session
+// set application session variables 
 app.use(session({
     secret: 'shhhh this is a secret',
     resave: true,
     saveUninitialized: true
 }));
 
-// Configure passport middleware
+// set session passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Configure flash messaging
+// configure flash messaging
 app.use(flash());
 
-// Set global variables for flash messages
+// set global variables for flash messaging 
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
@@ -51,13 +46,13 @@ app.use((req, res, next) => {
     next();
 });
 
-// Set express routing files 
+// set express routing paths  
 app.use('/', require('./routes/index.js'));
 app.use('/admin', require('./routes/admin.js'));
 
-// static public folder
+// set static path for public folder
 app.use(express.static('public'));
 
-// Start application 
+// start application on port 5000
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, console.log(`Server started on port ${PORT}`));

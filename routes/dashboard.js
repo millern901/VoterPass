@@ -15,19 +15,22 @@ const Queue = require('../models/Queue');
 const Rate = require('../models/Rate');
 const Admin = require('../models/Admin');
 
-// dashboard webpage get requests
+// dashboard webpage get request
 router.get('/', async (req, res) => {
+    // get statistics for queue
     const queueQuery = await Queue.find({});
     let queue = queueQuery[0];
     let currentTime = new Date();
     let queueLength = queue.queueOneLength;
     let nextCallbackTime = new Date(currentTime.getTime() + Math.round(queue.callbackRate * queueLength)*60000);
 
+    // format output 
     currentTime = String(currentTime).split("GMT");
     currentTime = currentTime[0];
     nextCallbackTime = String(nextCallbackTime).split("GMT");
     nextCallbackTime = nextCallbackTime[0];
 
+    // render dashboard page 
     res.render('dashboard', 
         {
             currentTime: currentTime, 
@@ -36,18 +39,23 @@ router.get('/', async (req, res) => {
             user: req.user
         });
 });
+
+// checkin webpage get request
 router.get('/checkin', async (req, res) => {
+    // get statistics for queue
     const queueQuery = await Queue.find({});
     let queue = queueQuery[0];
     let currentTime = new Date();
     let queueLength = queue.queueOneLength;
     let nextCallbackTime = new Date(currentTime.getTime() + Math.round(queue.callbackRate * queueLength)*60000);
 
+    // format output 
     currentTime = String(currentTime).split("GMT");
     currentTime = currentTime[0];
     nextCallbackTime = String(nextCallbackTime).split("GMT");
     nextCallbackTime = nextCallbackTime[0];
 
+    // render checkin page 
     res.render('checkin', 
         {
             currentTime: currentTime, 
@@ -56,19 +64,28 @@ router.get('/checkin', async (req, res) => {
             user: req.user
         });
 });
+
+// return webpage get request
 router.get('/return', (req, res) => {
+    // render return page 
     res.render('return', 
     {
         user: req.user
     });
 });
+
+// update webpage get request
 router.get('/update', (req, res) => {
+    // render update page 
     res.render('update', 
         {
             user: req.user
         });
 });
+
+// ticket webpage get request
 router.get('/ticket', async (req, res) => {
+    // map all tickets to their name and directory path
     let currentTime = new Date();
     const dirPath = path.resolve('public/tickets');
     const tickets = fs.readdirSync(dirPath).map(name => {
@@ -77,6 +94,8 @@ router.get('/ticket', async (req, res) => {
             url: `/tickets/${name}`
         };
     });
+
+    // map all tickets to their respective voters stored in the database 
     const tempTickets = [];
     for (let i = 0; i < tickets.length; i++) {
         let tempID = mongoose.Types.ObjectId(String(tickets[i].name));
@@ -97,13 +116,19 @@ router.get('/ticket', async (req, res) => {
             continue;
         }
     }
+
+    // sort the tickets so that the most recent is ontop 
     const updatedTickets = tempTickets.sort((a, b) => {
         return b[2].getTime() - a[2].getTime();
     });
     
+    // render ticket page 
     res.render('ticket', { updatedTickets, user: req.user });
 });
+
+// help webpage get request
 router.get('/help', (req, res) => {
+    // render help page 
     res.render('help', 
     {
         user: req.user
@@ -328,7 +353,7 @@ router.post('/update', async (req, res) => {
     }
 });
 
-// check that a file exists 
+// function to determine if a filepath exists 
 function fileExists(path) {
     try  {
         return fs.statSync(path).isFile();
