@@ -4,7 +4,7 @@ Welcome to VoterPass! This website is designed to create a virtual queue for vot
 ## Motivation
 VoterPass was created in order improve the voting experience and keep people safe. During election day, lines can be long and crowded, which is especially problematic during the COVID-19 crisis. By creating a virtual queue, people can move around and stand where they want. This helps maintain social distancing and overall gives a better voting experience.
 
-## Tech/framwork Used
+## Tech/Framwork Used
 Databases- MongoDB
 Backend Development- Express
 Frontend Development- EJS
@@ -20,8 +20,9 @@ When the voter returns at their specified time, the ticket is scanned on the ret
 ## Installation
 Use "npm install -i" to install proper dependencies. 
 
-## Installation
+## Running the Application
 Run in development mode: "npm run dev".
+
 Run in release mode: "npm run start".
 
 ## Credits
